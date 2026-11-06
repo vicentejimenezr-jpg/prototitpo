@@ -455,7 +455,7 @@ export default function KioskAdminPanel() {
                 Solicitudes de Afiliación Recibidas ({kioskApplications.length})
               </h3>
               <p className="text-xs text-neutral-500">
-                Formularios completados por quioscos y casinos para incorporarse a PUCV Ya!
+                Formularios completados por quioscos y casinos para incorporarse a EatPUCV
               </p>
             </div>
           </div>

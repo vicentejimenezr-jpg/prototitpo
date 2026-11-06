@@ -76,7 +76,7 @@ export default function ReservationModal() {
               <span className="bg-white/20 text-white font-extrabold text-[11px] px-2 py-0.5 rounded-full">
                 Paso Final
               </span>
-              <span className="text-xs text-white/80">PUCV Ya!</span>
+              <span className="text-xs text-white/80">EatPUCV</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black mt-1">Reserva de Comida en Quiosco</h2>
             <p className="text-xs text-white/90 mt-0.5">

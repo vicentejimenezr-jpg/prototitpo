@@ -214,7 +214,7 @@ export default function KioskAuthModal() {
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5">
                 {currentTab === 'login' && 'Iniciar Sesión en Modo Quiosco'}
-                {currentTab === 'register' && 'Formulario para Unirse a PUCV Ya!'}
+                {currentTab === 'register' && 'Formulario para Unirse a EatPUCV'}
                 {currentTab === 'recover' && 'Recuperar Acceso de Quiosco'}
               </h2>
             </div>
@@ -435,7 +435,7 @@ export default function KioskAuthModal() {
                       ¡Solicitud Registrada con Éxito!
                     </span>
                     <h3 className="text-xl font-black text-neutral-900 mt-2">
-                      Bienvenido a la red de quioscos PUCV Ya!
+                      Bienvenido a la red de quioscos EatPUCV
                     </h3>
                     <p className="text-xs text-neutral-600 mt-1 max-w-md mx-auto">
                       Hemos recibido la postulación de <strong>{registerSuccess.application.kioskName}</strong> para el campus <strong>{registerSuccess.kiosk.campusName}</strong>.
@@ -501,7 +501,7 @@ export default function KioskAuthModal() {
                   <div className="bg-pedidosya-lightRed/50 border border-pedidosya-red/20 rounded-2xl p-3.5 text-xs text-neutral-700">
                     <p className="font-bold text-pedidosya-red flex items-center gap-1.5 mb-1">
                       <Store className="w-4 h-4" />
-                      <span>Formulario de Incorporación a PUCV Ya!</span>
+                      <span>Formulario de Incorporación a EatPUCV</span>
                     </p>
                     <p className="text-neutral-600 leading-relaxed">
                       Completa los datos de tu quiosco, cafetería o casino para recibir pedidos anticipados y eliminar las filas durante los recreos.
@@ -735,7 +735,7 @@ export default function KioskAuthModal() {
                           className="rounded border-neutral-300 text-pedidosya-red focus:ring-pedidosya-red w-4 h-4 mt-0.5"
                         />
                         <span>
-                          Declaro ser concesionario o dependiente autorizado de quiosco en la Pontificia Universidad Católica de Valparaíso y acepto los términos de servicio de PUCV Ya!.
+                          Declaro ser concesionario o dependiente autorizado de quiosco en la Pontificia Universidad Católica de Valparaíso y acepto los términos de servicio de EatPUCV.
                         </span>
                       </label>
                       {regErrors.acceptTerms && (

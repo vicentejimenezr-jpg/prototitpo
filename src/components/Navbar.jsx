@@ -74,12 +74,12 @@ export default function Navbar() {
               className="flex items-center gap-2 cursor-pointer select-none group"
             >
               <div className="w-10 h-10 rounded-2xl bg-pedidosya-red flex items-center justify-center text-white shadow-md shadow-pedidosya-red/30 group-hover:scale-105 transition-transform">
-                <span className="text-xl font-black tracking-tighter">P!</span>
+                <span className="text-sm font-black tracking-tighter">Eat</span>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-xl text-neutral-900 tracking-tight">
-                    PUCV<span className="text-pedidosya-red">Ya!</span>
+                    Eat<span className="text-pedidosya-red">PUCV</span>
                   </span>
                   <span className="text-[10px] uppercase font-bold bg-neutral-100 text-pedidosya-pucv px-1.5 py-0.5 rounded border border-neutral-300">
                     Valparaíso

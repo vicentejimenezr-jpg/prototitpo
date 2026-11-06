@@ -159,11 +159,11 @@ function MainContent() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-neutral-200 text-xs text-neutral-600">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-xl bg-pedidosya-red flex items-center justify-center text-white font-black text-sm">
-                  P!
+                <div className="w-8 h-8 rounded-xl bg-pedidosya-red flex items-center justify-center text-white font-black text-xs">
+                  Eat
                 </div>
                 <span className="font-extrabold text-base text-neutral-900">
-                  PUCV<span className="text-pedidosya-red">Ya!</span>
+                  Eat<span className="text-pedidosya-red">PUCV</span>
                 </span>
               </div>
               <p className="text-neutral-500 leading-relaxed">
@@ -200,7 +200,7 @@ function MainContent() {
             <div>
               <h4 className="font-bold text-neutral-900 uppercase tracking-wider mb-3">¿Tienes un Quiosco?</h4>
               <p className="text-neutral-500 mb-3 leading-relaxed">
-                Integra tu quiosco o casino universitario a PUCV Ya! para recibir reservas automáticas de los estudiantes.
+                Integra tu quiosco o casino universitario a EatPUCV para recibir reservas automáticas de los estudiantes.
               </p>
               <div className="flex flex-col gap-2">
                 <button 
@@ -222,7 +222,7 @@ function MainContent() {
           </div>
 
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-400 gap-3">
-            <p>© 2026 PUCV Ya! - Diseñado para la comunidad universitaria de Valparaíso y Viña del Mar.</p>
+            <p>© 2026 EatPUCV - Diseñado para la comunidad universitaria de Valparaíso y Viña del Mar.</p>
             <p className="flex items-center gap-1">
               <span>Hecho con</span>
               <Heart className="w-3.5 h-3.5 fill-pedidosya-red text-pedidosya-red" />

@@ -1,4 +1,4 @@
-# PUCV Ya! 🍔☕ - Estilo PedidosYa para Quioscos de la PUCV
+# EatPUCV 🍔☕ - Plataforma para Quioscos de la PUCV
 
 Aplicación web interactiva estilo **PedidosYa** diseñada específicamente para la comunidad universitaria de la **Pontificia Universidad Católica de Valparaíso (PUCV)** en la Región de Valparaíso (Valparaíso, Viña del Mar y Curauma).
 

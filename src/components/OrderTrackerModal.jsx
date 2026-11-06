@@ -59,7 +59,7 @@ export default function OrderTrackerModal() {
             <span className="bg-pedidosya-pucvGold text-neutral-900 font-black text-[10px] px-2 py-0.5 rounded">
               TICKET DE RETIRO
             </span>
-            <span className="text-xs text-white/70">PUCV Ya!</span>
+            <span className="text-xs text-white/70">EatPUCV</span>
           </div>
 
           <div className="flex items-baseline justify-between mt-1">
@@ -89,7 +89,7 @@ export default function OrderTrackerModal() {
           {trackingOrder.status === 'recibido' && '⏳ Tu orden fue recibida por el quiosco y está en cola de preparación.'}
           {trackingOrder.status === 'preparando' && '👨‍🍳 ¡El quiosco está preparando tu comida con ingredientes frescos!'}
           {trackingOrder.status === 'listo' && '🎉 ¡TU PEDIDO YA ESTÁ LISTO! Acércate al mesón para retirar.'}
-          {trackingOrder.status === 'entregado' && '✅ Pedido retirado exitosamente. ¡Gracias por usar PUCV Ya!'}
+          {trackingOrder.status === 'entregado' && '✅ Pedido retirado exitosamente. ¡Gracias por usar EatPUCV!'}
         </div>
 
         {/* Body content */}
