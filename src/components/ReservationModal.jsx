@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { PICKUP_TIME_OPTIONS, PAYMENT_METHODS } from '../data/mockData';
 import { 
@@ -8,7 +8,11 @@ import {
   Mail, 
   Phone, 
   CheckCircle, 
-  AlertCircle
+  AlertCircle,
+  Flame,
+  Info,
+  Calendar,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function ReservationModal() {
@@ -17,11 +21,15 @@ export default function ReservationModal() {
     setIsCheckoutOpen, 
     cart, 
     cartTotal, 
-    createReservation 
+    createReservation,
+    kiosks,
+    getKioskActiveAsapOrders,
+    getCurrentTime,
+    setSimulatedTime
   } = useApp();
 
   const [selectedTimeOption, setSelectedTimeOption] = useState('recreo-1');
-  const [customTime, setCustomTime] = useState('12:15');
+  const [customTime, setCustomTime] = useState('13:30');
   const [customerName, setCustomerName] = useState('Vicente Morales');
   const [customerEmail, setCustomerEmail] = useState('vicente.morales@pucv.cl');
   const [customerPhone, setCustomerPhone] = useState('+56 9 8765 4321');
@@ -32,6 +40,67 @@ export default function ReservationModal() {
   if (!isCheckoutOpen || cart.length === 0) return null;
 
   const firstItem = cart[0];
+  const currentKiosk = kiosks.find(k => k.id === firstItem?.kioskId) || kiosks[0];
+
+  // 1. Check if cart has "Comida Lenta" (churrascos, mechada, a la plancha, etc.)
+  const hasSlowFood = cart.some(item => item.isSlowFood || item.category === 'comida_lenta');
+  const slowFoodItems = cart.filter(item => item.isSlowFood || item.category === 'comida_lenta');
+
+  // 2. Kiosk ASAP capacity setting (configured from 1 to 15 in Kiosk Mode)
+  const maxAsapOrders = currentKiosk?.maxAsapOrders || 5;
+  const allowAsapPickup = currentKiosk?.allowAsapPickup ?? true;
+  const activeAsapOrdersCount = firstItem ? getKioskActiveAsapOrders(firstItem.kioskId) : 0;
+  const isAsapFull = activeAsapOrdersCount >= maxAsapOrders;
+
+  // 3. Current system time & minutes from midnight
+  const currentTime = getCurrentTime();
+  const currentTotalMinutes = currentTime.hour * 60 + currentTime.minute;
+
+  // Evaluate each time slot for availability based on time, slow food, and kiosk capacity
+  const evaluatedSlots = PICKUP_TIME_OPTIONS.map(slot => {
+    let isDisabled = false;
+    let reason = '';
+
+    if (slot.isAsap) {
+      if (hasSlowFood) {
+        isDisabled = true;
+        reason = 'No disponible para comida lenta (cocción 20+ min)';
+      } else if (!allowAsapPickup) {
+        isDisabled = true;
+        reason = 'Pausado temporalmente por el quiosco';
+      } else if (isAsapFull) {
+        isDisabled = true;
+        reason = `Cupos llenos en cocina (${activeAsapOrdersCount}/${maxAsapOrders})`;
+      }
+    } else if (slot.targetHour !== undefined) {
+      const slotTotalMinutes = slot.targetHour * 60 + slot.targetMinute;
+      // If current time is equal or past the slot time, it is disabled!
+      if (currentTotalMinutes >= slotTotalMinutes) {
+        isDisabled = true;
+        reason = `Horario pasado (${slot.timeStr})`;
+      }
+    }
+
+    return {
+      ...slot,
+      isDisabled,
+      reason
+    };
+  });
+
+  // Ensure selected option is not a disabled option
+  useEffect(() => {
+    const currentSlotObj = evaluatedSlots.find(s => s.id === selectedTimeOption);
+    if (!currentSlotObj || currentSlotObj.isDisabled) {
+      // Pick first upcoming valid slot or fallback to custom
+      const firstAvailable = evaluatedSlots.find(s => !s.isDisabled && s.id !== 'custom');
+      if (firstAvailable) {
+        setSelectedTimeOption(firstAvailable.id);
+      } else {
+        setSelectedTimeOption('custom');
+      }
+    }
+  }, [selectedTimeOption, currentTotalMinutes, hasSlowFood, allowAsapPickup, isAsapFull]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -40,10 +109,29 @@ export default function ReservationModal() {
       return;
     }
 
-    const timeObj = PICKUP_TIME_OPTIONS.find(t => t.id === selectedTimeOption);
+    const timeObj = evaluatedSlots.find(t => t.id === selectedTimeOption);
+    if (timeObj?.isDisabled) {
+      setErrorMessage('El horario seleccionado no está disponible. Por favor elige un horario posterior.');
+      return;
+    }
+
+    if (selectedTimeOption === 'custom') {
+      const [cH, cM] = customTime.split(':').map(Number);
+      const customMin = (cH || 0) * 60 + (cM || 0);
+      const minRequired = currentTotalMinutes + (hasSlowFood ? 25 : 10);
+      if (customMin <= currentTotalMinutes) {
+        setErrorMessage(`La hora personalizada (${customTime}) ya pasó. Elige una hora futura (después de las ${currentTime.timeStr} hrs).`);
+        return;
+      }
+      if (customMin < minRequired) {
+        setErrorMessage(`Por favor da al menos ${hasSlowFood ? '25' : '10'} minutos de preparación. Hora mínima sugerida: ${Math.floor(minRequired / 60)}:${String(minRequired % 60).padStart(2, '0')} hrs.`);
+        return;
+      }
+    }
+
     const pickupTimeStr = selectedTimeOption === 'custom' 
       ? `${customTime} hrs` 
-      : timeObj?.timeStr || 'Lo antes posible';
+      : timeObj?.timeStr || 'Horario programado';
 
     const paymentObj = PAYMENT_METHODS.find(p => p.id === selectedPayment);
 
@@ -51,7 +139,7 @@ export default function ReservationModal() {
       customerName,
       customerEmail,
       customerPhone,
-      pickupTime: selectedTimeOption === 'custom' ? `Personalizado (${customTime})` : timeObj?.label,
+      pickupTime: selectedTimeOption === 'custom' ? `Personalizado (${customTime} hrs)` : timeObj?.label,
       pickupTimeStr,
       paymentMethod: paymentObj ? `${paymentObj.name} (${paymentObj.badge})` : 'Efectivo',
       orderNote
@@ -98,49 +186,149 @@ export default function ReservationModal() {
             </div>
           )}
 
+          {/* WARNING 1: Slow Food Notice */}
+          {hasSlowFood && (
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 sm:p-4 text-xs text-amber-900 shadow-2xs">
+              <div className="flex items-start gap-2.5">
+                <span className="text-2xl shrink-0">🥩</span>
+                <div>
+                  <h4 className="font-black text-amber-950 text-xs sm:text-sm uppercase tracking-wide">
+                    Pedido con Comida Lenta (A la Plancha)
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-amber-800 mt-1 leading-relaxed">
+                    Tu pedido incluye <strong>{slowFoodItems.map(i => i.name).join(', ')}</strong>. Al ser comida cocinada a la plancha con tiempo de preparación de 20 a 25 min, <strong>la opción "Lo antes posible" está desactivada</strong>. Selecciona un recreo u horario posterior para tenerlo recién hecho al llegar.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 1. SELECCIONA HORARIO DE RETIRO */}
           <div>
-            <div className="flex items-center gap-2 mb-2.5 sm:mb-3">
-              <div className="w-6 h-6 rounded-full bg-pedidosya-lightRed text-pedidosya-red flex items-center justify-center font-bold text-xs shrink-0">
-                1
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-pedidosya-lightRed text-pedidosya-red flex items-center justify-center font-bold text-xs shrink-0">
+                  1
+                </div>
+                <h3 className="font-black text-neutral-900 text-sm sm:text-base">
+                  ¿A qué hora retirarás tu pedido en el quiosco?
+                </h3>
               </div>
-              <h3 className="font-black text-neutral-900 text-sm sm:text-base">
-                ¿A qué hora retirarás tu pedido en el quiosco?
-              </h3>
             </div>
 
+            {/* Real-time Clock Bar with Testing Selector */}
+            <div className="bg-neutral-100 p-2.5 sm:p-3 rounded-2xl border border-neutral-200 text-xs mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-pedidosya-red shrink-0" />
+                <span className="text-neutral-700">
+                  Hora actual: <strong className="text-neutral-950 font-black text-sm">{currentTime.timeStr} hrs</strong>
+                </span>
+                {currentTime.isSimulated && (
+                  <span className="bg-amber-200 text-amber-900 text-[10px] font-black px-1.5 py-0.5 rounded">
+                    Simulación activa
+                  </span>
+                )}
+              </div>
+
+              {/* Simulation test buttons so user can verify "por ejemplo son las 12:45" */}
+              <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                <span className="text-neutral-500 font-medium">Probar hora:</span>
+                <button
+                  type="button"
+                  onClick={() => setSimulatedTime({ hour: 10, minute: 30 })}
+                  className={`px-2 py-0.5 rounded-lg font-bold transition active:scale-95 ${
+                    currentTime.hour === 10 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                  }`}
+                  title="Simular 10:30 (Todo disponible)"
+                >
+                  10:30
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSimulatedTime({ hour: 12, minute: 45 })}
+                  className={`px-2 py-0.5 rounded-lg font-black transition active:scale-95 ${
+                    currentTime.hour === 12 && currentTime.minute === 45 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-300'
+                  }`}
+                  title="Ejemplo solicitado: 12:45 (desactiva 11:15 y 12:45)"
+                >
+                  12:45 (Ejemplo)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSimulatedTime({ hour: 14, minute: 0 })}
+                  className={`px-2 py-0.5 rounded-lg font-bold transition active:scale-95 ${
+                    currentTime.hour === 14 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                  }`}
+                  title="Simular 14:00 (Desactiva almuerzos)"
+                >
+                  14:00
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSimulatedTime(null)}
+                  className={`px-2 py-0.5 rounded-lg font-bold transition active:scale-95 ${
+                    !currentTime.isSimulated ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-200 border border-neutral-200'
+                  }`}
+                  title="Restablecer a la hora actual de tu reloj"
+                >
+                  Hora Real
+                </button>
+              </div>
+            </div>
+
+            {/* Time Slot Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-              {PICKUP_TIME_OPTIONS.map((slot) => {
+              {evaluatedSlots.map((slot) => {
                 const isSelected = selectedTimeOption === slot.id;
+                const isDisabled = slot.isDisabled;
+
                 return (
                   <button
                     type="button"
                     key={slot.id}
-                    onClick={() => setSelectedTimeOption(slot.id)}
-                    className={`p-3 sm:p-3.5 rounded-xl border text-left text-xs font-bold flex items-center justify-between transition active:scale-[0.99] min-h-[46px] ${
-                      isSelected
+                    disabled={isDisabled}
+                    onClick={() => !isDisabled && setSelectedTimeOption(slot.id)}
+                    className={`p-3 sm:p-3.5 rounded-xl border text-left text-xs font-bold flex items-center justify-between transition min-h-[48px] ${
+                      isDisabled
+                        ? 'opacity-40 bg-neutral-100 text-neutral-400 border-dashed border-neutral-300 cursor-not-allowed'
+                        : isSelected
                         ? 'border-pedidosya-red bg-pedidosya-lightRed text-pedidosya-red font-black shadow-2xs'
-                        : 'border-neutral-200 hover:bg-neutral-50 text-neutral-700'
+                        : 'border-neutral-200 hover:bg-neutral-50 text-neutral-700 active:scale-[0.99]'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 shrink-0" />
-                      <span>{slot.label}</span>
+                    <div className="flex items-center gap-2 min-w-0 pr-1">
+                      <Clock className={`w-3.5 h-3.5 shrink-0 ${isDisabled ? 'text-neutral-400' : 'text-neutral-600'}`} />
+                      <div className="min-w-0">
+                        <span className={`block truncate ${isDisabled ? 'line-through text-neutral-400' : ''}`}>
+                          {slot.label}
+                        </span>
+                        {isDisabled && (
+                          <span className="text-[10px] text-rose-600 font-bold block truncate">
+                            ✕ {slot.reason}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    {isSelected && <CheckCircle className="w-4 h-4 fill-pedidosya-red text-white shrink-0" />}
+
+                    {isSelected && !isDisabled && (
+                      <CheckCircle className="w-4 h-4 fill-pedidosya-red text-white shrink-0" />
+                    )}
                   </button>
                 );
               })}
             </div>
 
             {selectedTimeOption === 'custom' && (
-              <div className="mt-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center gap-3">
-                <label className="text-xs font-bold text-neutral-700">Elige la hora exacta:</label>
+              <div className="mt-3 p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <label className="text-xs font-bold text-neutral-800 block">Elige tu hora exacta de retiro:</label>
+                  <p className="text-[11px] text-neutral-500">Debe ser posterior a las {currentTime.timeStr} hrs</p>
+                </div>
                 <input
                   type="time"
                   value={customTime}
                   onChange={(e) => setCustomTime(e.target.value)}
-                  className="bg-white px-3 py-1.5 rounded-lg border border-neutral-300 text-xs font-bold text-neutral-900 outline-none"
+                  className="bg-white px-3 py-2 rounded-xl border border-neutral-300 text-sm font-black text-neutral-900 outline-none w-36 shadow-2xs"
                 />
               </div>
             )}
@@ -251,13 +439,25 @@ export default function ReservationModal() {
 
           {/* Resumen del pedido */}
           <div className="bg-neutral-50 p-3.5 sm:p-4 rounded-2xl border border-neutral-200 space-y-2">
-            <h4 className="text-xs font-black uppercase tracking-wider text-neutral-700 mb-1.5">
-              Resumen de la orden ({cart.length} productos)
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-700">
+                Resumen de la orden ({cart.length} productos)
+              </h4>
+              {hasSlowFood && (
+                <span className="text-[10px] font-black bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">
+                  🥩 Incluye Comida Lenta
+                </span>
+              )}
+            </div>
             <div className="space-y-1.5">
               {cart.map((item, i) => (
                 <div key={i} className="flex justify-between text-xs text-neutral-700 gap-2">
-                  <span className="truncate">{item.quantity}x {item.name}</span>
+                  <span className="truncate">
+                    {item.quantity}x {item.name}
+                    {(item.isSlowFood || item.category === 'comida_lenta') && (
+                      <span className="text-rose-600 font-bold ml-1 text-[10px]">(Plancha)</span>
+                    )}
+                  </span>
                   <span className="font-bold shrink-0">${item.subtotal.toLocaleString('es-CL')}</span>
                 </div>
               ))}

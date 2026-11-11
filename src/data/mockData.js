@@ -63,6 +63,7 @@ export const CAMPUSES = [
 
 export const FOOD_CATEGORIES = [
   { id: 'todos', name: 'Todo', icon: '🍽️' },
+  { id: 'comida_lenta', name: 'Comida Lenta (A la Plancha)', icon: '🥩' },
   { id: 'completos', name: 'Completos & Sandwiches', icon: '🌭' },
   { id: 'cafeteria', name: 'Café & Desayuno', icon: '☕' },
   { id: 'almuerzos', name: 'Menú & Almuerzos', icon: '🍲' },
@@ -90,22 +91,59 @@ export const INITIAL_KIOSKS = [
     openingHours: '08:00 - 18:30',
     acceptsJunaeb: true,
     featuredBadge: 'Favorito Estudiantes',
+    maxAsapOrders: 5,
+    allowAsapPickup: true,
     lat: -33.0445,
     lng: -71.6148,
     phone: '+56 9 8765 4321',
     menu: [
       {
-        id: 'p-c1-1',
-        name: 'Sandwich Mechada Italiana en Marraqueta',
-        description: 'Carne mechada de larga cocción deshilachada, palta hass fresca, tomate y mayonesa casera en crujiente marraqueta porteña.',
-        price: 3990,
-        originalPrice: 4500,
-        category: 'completos',
+        id: 'p-c1-slow-1',
+        name: 'Churrasco Italiano a la Plancha (100% Posta)',
+        description: 'Finas láminas de posta rosada cocinadas al momento en plancha caliente con abundante palta hass molida, tomate natural y mayonesa casera en marraqueta tostada.',
+        price: 4490,
+        category: 'comida_lenta',
         image: 'https://images.unsplash.com/photo-1553909489-cd47e0907980?auto=format&fit=crop&w=600&q=80',
         available: true,
         isPopular: true,
         acceptsJunaeb: true,
-        prepTimeMinutes: 10,
+        isSlowFood: true,
+        prepTimeMinutes: 20,
+        options: {
+          bread: ['Marraqueta Porteña', 'Pan Frica', 'Pan Ciabatta'],
+          extras: ['Con Ají Verde (+ $300)', 'Queso fundido extra (+ $600)', 'Mayo tradicional', 'Sin ajo']
+        }
+      },
+      {
+        id: 'p-c1-slow-2',
+        name: 'Churrasco Chacarero Porteño a la Plancha',
+        description: 'Carne de vacuno a la plancha, porotos verdes frescos recién hervidos, ají verde encurtido, rodajas de tomate jugoso y mayonesa casera.',
+        price: 4690,
+        category: 'comida_lenta',
+        image: 'https://images.unsplash.com/photo-1521305916504-4a1121188589?auto=format&fit=crop&w=600&q=80',
+        available: true,
+        isPopular: true,
+        acceptsJunaeb: true,
+        isSlowFood: true,
+        prepTimeMinutes: 22,
+        options: {
+          bread: ['Marraqueta Porteña', 'Pan Frica Artesanal'],
+          extras: ['Con Ají Verde', 'Sin Ají Verde', 'Porotos Verdes Extra (+ $300)']
+        }
+      },
+      {
+        id: 'p-c1-1',
+        name: 'Sandwich Mechada Italiana de Larga Cocción',
+        description: 'Carne mechada de larga cocción deshilachada braseada 4 horas, palta hass fresca, tomate y mayonesa casera en crujiente marraqueta porteña.',
+        price: 4290,
+        originalPrice: 4800,
+        category: 'comida_lenta',
+        image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80',
+        available: true,
+        isPopular: true,
+        acceptsJunaeb: true,
+        isSlowFood: true,
+        prepTimeMinutes: 18,
         options: {
           bread: ['Marraqueta Porteña', 'Pan Frica', 'Pan Ciabatta'],
           extras: ['Con Ají Verde (+ $300)', 'Queso fundido extra (+ $600)', 'Mayo normal', 'Mayo sin ajo']
@@ -239,10 +277,46 @@ export const INITIAL_KIOSKS = [
     openingHours: '08:00 - 19:00',
     acceptsJunaeb: true,
     featuredBadge: 'Más Pedido de Viña',
+    maxAsapOrders: 5,
+    allowAsapPickup: true,
     lat: -33.0125,
     lng: -71.5398,
     phone: '+56 9 7788 9900',
     menu: [
+      {
+        id: 'p-s1-slow-1',
+        name: 'Churrasco Luco Doble Queso a la Plancha',
+        description: 'Churrasco de vacuno abundante a la plancha cubierto de doble queso gouda fundido al vapor en pan amasado caliente.',
+        price: 4390,
+        category: 'comida_lenta',
+        image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80',
+        available: true,
+        isPopular: true,
+        acceptsJunaeb: true,
+        isSlowFood: true,
+        prepTimeMinutes: 18,
+        options: {
+          bread: ['Pan Amasado Casero', 'Marraqueta'],
+          extras: ['Cebolla caramelizada (+ $400)', 'Ají verde (+ $300)']
+        }
+      },
+      {
+        id: 'p-s1-slow-2',
+        name: 'Hamburguesa Casera 180g con Cheddar & Tocino',
+        description: 'Carne molida seleccionada amasada a mano y asada a la plancha con queso cheddar derretido, tocino crujiente, cebolla morada y lechuga fresca.',
+        price: 4890,
+        category: 'comida_lenta',
+        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
+        available: true,
+        isPopular: true,
+        acceptsJunaeb: true,
+        isSlowFood: true,
+        prepTimeMinutes: 25,
+        options: {
+          bread: ['Pan Brioche Artesanal', 'Pan Frica'],
+          extras: ['Salsa BBQ Ahumada', 'Mayo Ajo Casera', 'Kétchup Clásico', 'Mostaza Miel']
+        }
+      },
       {
         id: 'p-s1-1',
         name: 'Promo Dúo Completos Italianos + Bebida',
@@ -369,21 +443,41 @@ export const INITIAL_KIOSKS = [
     openingHours: '07:30 - 20:00',
     acceptsJunaeb: true,
     featuredBadge: 'Rápido para Recreos',
+    maxAsapOrders: 5,
+    allowAsapPickup: true,
     lat: -33.0428,
     lng: -71.6185,
     phone: '+56 9 5544 3322',
     menu: [
       {
-        id: 'p-ibc-1',
-        name: 'Churrasco Italiano en Pan Frica Casero',
-        description: 'Finas láminas de posta paleta a la plancha, palta fresca, tomate y mayonesa casera en pan frica tostado.',
-        price: 4200,
-        category: 'completos',
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
+        id: 'p-ibc-slow-1',
+        name: 'Chorrillana Porteña Individual a la Plancha',
+        description: 'Papas fritas caseras doradas, carne de vacuno salteada a la plancha con cebolla caramelizada suave y 2 huevos fritos al punto.',
+        price: 4990,
+        category: 'comida_lenta',
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
         available: true,
         isPopular: true,
         acceptsJunaeb: true,
-        prepTimeMinutes: 10
+        isSlowFood: true,
+        prepTimeMinutes: 25
+      },
+      {
+        id: 'p-ibc-1',
+        name: 'Churrasco Italiano a la Plancha en Pan Frica',
+        description: 'Finas láminas de posta paleta a la plancha, palta fresca, tomate y mayonesa casera en pan frica tostado.',
+        price: 4200,
+        category: 'comida_lenta',
+        image: 'https://images.unsplash.com/photo-1553909489-cd47e0907980?auto=format&fit=crop&w=600&q=80',
+        available: true,
+        isPopular: true,
+        acceptsJunaeb: true,
+        isSlowFood: true,
+        prepTimeMinutes: 20,
+        options: {
+          bread: ['Pan Frica Casero', 'Marraqueta'],
+          extras: ['Con Ají Verde (+ $300)', 'Queso derretido (+ $500)']
+        }
       },
       {
         id: 'p-ibc-2',
@@ -525,13 +619,13 @@ export const INITIAL_KIOSKS = [
 ];
 
 export const PICKUP_TIME_OPTIONS = [
-  { id: 'asap', label: 'Lo antes posible (~10-15 min)', timeStr: 'En 15 min' },
-  { id: 'recreo-1', label: 'Recreo de mañana (11:15 - 11:30)', timeStr: '11:15 hrs' },
-  { id: 'almuerzo-1', label: 'Primer turno almuerzo (12:45 - 13:15)', timeStr: '12:45 hrs' },
-  { id: 'almuerzo-2', label: 'Segundo turno almuerzo (13:30 - 14:00)', timeStr: '13:30 hrs' },
-  { id: 'recreo-tarde', label: 'Recreo de la tarde (15:45 - 16:00)', timeStr: '15:45 hrs' },
-  { id: 'salida', label: 'Horario de salida (17:30 - 18:00)', timeStr: '17:30 hrs' },
-  { id: 'custom', label: 'Horario personalizado...', timeStr: 'Personalizado' }
+  { id: 'asap', label: 'Lo antes posible (~10-15 min)', timeStr: 'En 15 min', isAsap: true },
+  { id: 'recreo-1', label: 'Recreo de mañana (11:15 - 11:30)', timeStr: '11:15 hrs', targetHour: 11, targetMinute: 15 },
+  { id: 'almuerzo-1', label: 'Primer turno almuerzo (12:45 - 13:15)', timeStr: '12:45 hrs', targetHour: 12, targetMinute: 45 },
+  { id: 'almuerzo-2', label: 'Segundo turno almuerzo (13:30 - 14:00)', timeStr: '13:30 hrs', targetHour: 13, targetMinute: 30 },
+  { id: 'recreo-tarde', label: 'Recreo de la tarde (15:45 - 16:00)', timeStr: '15:45 hrs', targetHour: 15, targetMinute: 45 },
+  { id: 'salida', label: 'Horario de salida (17:30 - 18:00)', timeStr: '17:30 hrs', targetHour: 17, targetMinute: 30 },
+  { id: 'custom', label: 'Horario personalizado...', timeStr: 'Personalizado', isCustom: true }
 ];
 
 export const PAYMENT_METHODS = [

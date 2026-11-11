@@ -32,6 +32,8 @@ export default function KioskAdminPanel() {
     updateOrderStatus, 
     toggleProductAvailability, 
     toggleKioskOpen,
+    updateKioskAsapSettings,
+    getKioskActiveAsapOrders,
     adminSelectedKioskId,
     setAdminSelectedKioskId,
     setIsAdminMode,
@@ -48,6 +50,9 @@ export default function KioskAdminPanel() {
   const [simulatedAlert, setSimulatedAlert] = useState(false);
 
   const selectedKiosk = kiosks.find(k => k.id === adminSelectedKioskId) || kiosks[0];
+
+  // Active ASAP / Express orders currently in kitchen for this kiosk
+  const activeAsapOrdersCount = getKioskActiveAsapOrders ? getKioskActiveAsapOrders(selectedKiosk.id) : 0;
 
   // Filter orders for this kiosk
   const kioskOrders = orders.filter(o => o.kioskId === selectedKiosk.id);
@@ -200,6 +205,88 @@ export default function KioskAdminPanel() {
         <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl">
           <p className="text-xs font-bold text-blue-800">Ventas Acumuladas</p>
           <p className="text-2xl font-black text-blue-900 mt-1">${totalSales.toLocaleString('es-CL')}</p>
+        </div>
+      </div>
+
+      {/* KIOSK ASAP CAPACITY CONTROL (Req: Lista del 1 al 15 para 'Retirar lo antes posible') */}
+      <div className="bg-amber-50/70 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="max-w-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Control de Mesón Express
+              </span>
+              <span className="text-xs text-neutral-500 font-medium">Pedidos inmediatos</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-neutral-900 leading-tight">
+              Capacidad máxima para "Retirar lo antes posible"
+            </h3>
+            <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
+              Configura cuántos pedidos simultáneos puede aceptar tu quiosco bajo la modalidad exprés (1 a 15). Al coparse los cupos, los estudiantes deberán reservar para un recreo programado.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {/* Dropdown 1 to 15 */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-neutral-700 mb-1">Cupos en simultáneo (1 a 15):</label>
+              <select
+                value={selectedKiosk.maxAsapOrders || 5}
+                onChange={(e) => updateKioskAsapSettings(selectedKiosk.id, Number(e.target.value), selectedKiosk.allowAsapPickup ?? true)}
+                className="bg-white border-2 border-amber-300 focus:border-pedidosya-red rounded-xl px-3 py-2 text-xs sm:text-sm font-black text-neutral-900 outline-none shadow-sm cursor-pointer"
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(n => (
+                  <option key={n} value={n}>
+                    {n} {n === 1 ? 'pedido máximo' : 'pedidos simultáneos'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Toggle Switch */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-neutral-700 mb-1">Recepción Exprés:</label>
+              <button
+                type="button"
+                onClick={() => updateKioskAsapSettings(selectedKiosk.id, selectedKiosk.maxAsapOrders || 5, !(selectedKiosk.allowAsapPickup ?? true))}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition shadow-sm ${
+                  (selectedKiosk.allowAsapPickup ?? true)
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                }`}
+              >
+                <span>{(selectedKiosk.allowAsapPickup ?? true) ? '🟢 Aceptando Inmediatos' : '⚪ Pausado por Quiosco'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Bar */}
+        <div className="mt-3.5 pt-3 border-t border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-neutral-800">Carga actual de cocina:</span>
+            <span className="font-mono font-black text-sm text-neutral-900">
+              {activeAsapOrdersCount} / {selectedKiosk.maxAsapOrders || 5} cupos ocupados
+            </span>
+            {activeAsapOrdersCount >= (selectedKiosk.maxAsapOrders || 5) && (
+              <span className="bg-rose-100 text-rose-800 text-[10px] font-black px-2 py-0.5 rounded-full">
+                Cupos Llenos (Cerrado a nuevos exprés)
+              </span>
+            )}
+          </div>
+
+          <div className="w-full sm:w-48 bg-neutral-200 rounded-full h-2.5 overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-500 ${
+                activeAsapOrdersCount >= (selectedKiosk.maxAsapOrders || 5)
+                  ? 'bg-rose-600'
+                  : activeAsapOrdersCount / (selectedKiosk.maxAsapOrders || 5) > 0.6
+                  ? 'bg-amber-500'
+                  : 'bg-emerald-500'
+              }`}
+              style={{ width: `${Math.min(100, Math.round((activeAsapOrdersCount / (selectedKiosk.maxAsapOrders || 5)) * 100))}%` }}
+            />
+          </div>
         </div>
       </div>
 

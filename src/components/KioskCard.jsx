@@ -82,6 +82,12 @@ export default function KioskCard({ kiosk }) {
                 <span>JUNAEB BAES</span>
               </div>
             )}
+
+            {kiosk.menu.some(p => p.isSlowFood || p.category === 'comida_lenta') && (
+              <div className="flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200" title="Tiene opciones de comida cocinada a la plancha">
+                <span>🥩 Plancha / Lenta</span>
+              </div>
+            )}
           </div>
 
           {/* Preview of popular items */}

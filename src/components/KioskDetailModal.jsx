@@ -30,7 +30,8 @@ export default function KioskDetailModal() {
     { id: 'todos', label: 'Todo el Menú' },
     ...Array.from(new Set(activeKiosk.menu.map(p => p.category))).map(cat => ({
       id: cat,
-      label: cat === 'completos' ? 'Completos & Sandwiches' :
+      label: cat === 'comida_lenta' ? '🥩 Comida Lenta & Plancha' :
+             cat === 'completos' ? 'Completos & Sandwiches' :
              cat === 'cafeteria' ? 'Cafetería & Desayunos' :
              cat === 'almuerzos' ? 'Menú Almuerzos' :
              cat === 'empanadas' ? 'Empanadas' :
@@ -159,10 +160,15 @@ export default function KioskDetailModal() {
                 {/* Details */}
                 <div className="flex-1 min-w-0 flex flex-col justify-between pr-1 sm:pr-2">
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <h4 className="font-bold text-neutral-900 text-xs sm:text-sm group-hover:text-pedidosya-red transition-colors truncate">
                         {product.name}
                       </h4>
+                      {(product.isSlowFood || product.category === 'comida_lenta') && (
+                        <span className="bg-rose-100 text-rose-900 border border-rose-300 text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded shrink-0">
+                          🥩 Cocción Lenta (~20m)
+                        </span>
+                      )}
                       {product.isPopular && (
                         <span className="bg-amber-100 text-amber-800 text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded shrink-0">
                           POPULAR

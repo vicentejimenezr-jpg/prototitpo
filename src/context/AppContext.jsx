@@ -4,11 +4,12 @@ import { INITIAL_KIOSKS, CAMPUSES } from '../data/mockData';
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  // Load kiosks from localStorage or initial
+  // Load kiosks from localStorage or initial (merged with latest categories)
   const [kiosks, setKiosks] = useState(() => {
     try {
-      const saved = localStorage.getItem('pucv_kiosks');
-      return saved ? JSON.parse(saved) : INITIAL_KIOSKS;
+      const saved = localStorage.getItem('pucv_kiosks_v3');
+      if (saved) return JSON.parse(saved);
+      return INITIAL_KIOSKS;
     } catch (e) {
       return INITIAL_KIOSKS;
     }
@@ -167,7 +168,7 @@ export const AppProvider = ({ children }) => {
 
   // Sync state to localStorage
   useEffect(() => {
-    localStorage.setItem('pucv_kiosks', JSON.stringify(kiosks));
+    localStorage.setItem('pucv_kiosks_v3', JSON.stringify(kiosks));
   }, [kiosks]);
 
   useEffect(() => {
@@ -397,6 +398,8 @@ export const AppProvider = ({ children }) => {
       name: product.name,
       price: product.price,
       image: product.image,
+      category: product.category,
+      isSlowFood: Boolean(product.isSlowFood || product.category === 'comida_lenta'),
       kioskId: kiosk.id,
       kioskName: kiosk.name,
       campusName: kiosk.campusName,
@@ -523,6 +526,57 @@ export const AppProvider = ({ children }) => {
     );
   };
 
+  // Vendor action: Update "Lo antes posible" capacity & toggle (1 to 15)
+  const updateKioskAsapSettings = (kioskId, maxOrders, allowAsap) => {
+    setKiosks(prev =>
+      prev.map(k => {
+        if (k.id !== kioskId) return k;
+        return {
+          ...k,
+          maxAsapOrders: Math.min(15, Math.max(1, Number(maxOrders) || 5)),
+          allowAsapPickup: allowAsap !== undefined ? Boolean(allowAsap) : (k.allowAsapPickup ?? true)
+        };
+      })
+    );
+  };
+
+  // Helper to count active ASAP orders for a kiosk
+  const getKioskActiveAsapOrders = (kioskId) => {
+    return orders.filter(
+      o => o.kioskId === kioskId &&
+      o.status !== 'entregado' &&
+      o.status !== 'cancelado' &&
+      (o.pickupTime?.toLowerCase().includes('antes') || o.pickupTimeStr?.toLowerCase().includes('min'))
+    ).length;
+  };
+
+  // Real-time Clock & Simulated Time for Testing (e.g. Test 12:45)
+  const [simulatedTime, setSimulatedTime] = useState(null); // e.g. { hour: 12, minute: 45 } or null for real time
+
+  const getCurrentTime = () => {
+    if (simulatedTime) {
+      const hStr = String(simulatedTime.hour).padStart(2, '0');
+      const mStr = String(simulatedTime.minute).padStart(2, '0');
+      return {
+        hour: simulatedTime.hour,
+        minute: simulatedTime.minute,
+        timeStr: `${hStr}:${mStr}`,
+        isSimulated: true
+      };
+    }
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    const hStr = String(hour).padStart(2, '0');
+    const mStr = String(minute).padStart(2, '0');
+    return {
+      hour,
+      minute,
+      timeStr: `${hStr}:${mStr}`,
+      isSimulated: false
+    };
+  };
+
   // Filtered Kiosks
   const filteredKiosks = kiosks.filter(kiosk => {
     // Campus filter
@@ -599,6 +653,11 @@ export const AppProvider = ({ children }) => {
         updateOrderStatus,
         toggleProductAvailability,
         toggleKioskOpen,
+        updateKioskAsapSettings,
+        getKioskActiveAsapOrders,
+        simulatedTime,
+        setSimulatedTime,
+        getCurrentTime,
         // Kiosk Auth & Applications
         isKioskAuthenticated,
         kioskUser,
