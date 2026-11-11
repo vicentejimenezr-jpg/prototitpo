@@ -68,10 +68,10 @@ export default function KioskAdminPanel() {
   };
 
   return (
-    <div className="bg-white rounded-3xl border-2 border-pedidosya-pucv/20 shadow-xl p-5 sm:p-7 mb-8 animate-fadeIn">
+    <div className="bg-white rounded-2xl sm:rounded-3xl border-2 border-pedidosya-pucv/20 shadow-xl p-3.5 sm:p-6 md:p-7 mb-6 sm:mb-8 animate-fadeIn">
       
       {/* Top Session Bar (Shows authenticated kiosk operator local123) */}
-      <div className="bg-pedidosya-pucv text-white rounded-2xl p-3.5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+      <div className="bg-pedidosya-pucv text-white rounded-xl sm:rounded-2xl p-3 sm:p-3.5 mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-pedidosya-red flex items-center justify-center text-white font-black shrink-0">
             <Store className="w-5 h-5" />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
+import MobileBottomNav from './components/MobileBottomNav';
 import BannerSlider from './components/BannerSlider';
 import CategoryChips from './components/CategoryChips';
 import KioskCard from './components/KioskCard';
@@ -43,10 +44,10 @@ function MainContent() {
   const currentCampusObj = campuses.find(c => c.id === selectedCampus);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA]">
+    <div className="min-h-screen flex flex-col bg-[#F8F9FA] pb-16 lg:pb-0">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 w-full">
         
         {/* Kiosk Vendor Admin Panel if toggled/authenticated */}
         {isAdminMode && isKioskAuthenticated && <KioskAdminPanel />}
@@ -59,22 +60,22 @@ function MainContent() {
 
         {/* Main View: Map or Kiosk Grid */}
         {currentView === 'map' ? (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">
-                  Mapa de Quioscos PUCV en Valparaíso y Viña del Mar
+                <h2 className="text-lg sm:text-2xl font-black text-neutral-900 tracking-tight leading-tight">
+                  Mapa de Quioscos PUCV en Valparaíso y Viña
                 </h2>
-                <p className="text-xs sm:text-sm text-neutral-500">
+                <p className="text-xs sm:text-sm text-neutral-500 mt-0.5">
                   Explora las ubicaciones dentro de Casa Central, Sausalito, IBC, Curauma y Recreo.
                 </p>
               </div>
 
               <button
                 onClick={() => setCurrentView('browse')}
-                className="text-xs font-bold text-pedidosya-red hover:underline"
+                className="text-xs font-bold text-pedidosya-red hover:underline self-start sm:self-auto"
               >
-                Volver a vista de lista
+                ← Volver a vista de lista
               </button>
             </div>
 
@@ -82,11 +83,11 @@ function MainContent() {
             <InteractiveMap />
 
             {/* Kiosks list preview below map */}
-            <div className="pt-4">
-              <h3 className="font-extrabold text-neutral-900 text-lg mb-4">
+            <div className="pt-2 sm:pt-4">
+              <h3 className="font-black text-neutral-900 text-base sm:text-lg mb-3 sm:mb-4">
                 Quioscos en el área seleccionada ({filteredKiosks.length})
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredKiosks.map(kiosk => (
                   <KioskCard key={kiosk.id} kiosk={kiosk} />
                 ))}
@@ -96,13 +97,13 @@ function MainContent() {
         ) : (
           <div>
             {/* Section Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">
+                  <h2 className="text-lg sm:text-2xl font-black text-neutral-900 tracking-tight leading-tight">
                     {selectedCampus === 'todos' ? 'Quioscos Disponibles' : `Quioscos en ${currentCampusObj?.name}`}
                   </h2>
-                  <span className="bg-neutral-200/80 text-neutral-700 text-xs font-extrabold px-2 py-0.5 rounded-full">
+                  <span className="bg-neutral-200/80 text-neutral-700 text-xs font-extrabold px-2 py-0.5 rounded-full shrink-0">
                     {filteredKiosks.length}
                   </span>
                 </div>
@@ -114,7 +115,7 @@ function MainContent() {
               {/* View on Map trigger link */}
               <button
                 onClick={() => setCurrentView('map')}
-                className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-pedidosya-red hover:text-pedidosya-darkRed transition bg-pedidosya-lightRed px-3 py-1.5 rounded-xl border border-pedidosya-red/20"
+                className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-pedidosya-red hover:text-pedidosya-darkRed transition bg-pedidosya-lightRed px-3 py-1.5 rounded-xl border border-pedidosya-red/20 shrink-0"
               >
                 <MapPin className="w-3.5 h-3.5" />
                 <span>Explorar en Mapa</span>
@@ -123,12 +124,12 @@ function MainContent() {
 
             {/* Kiosks Grid */}
             {filteredKiosks.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center border border-neutral-200 shadow-sm max-w-lg mx-auto my-8">
-                <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4 text-2xl">
+              <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-neutral-200 shadow-sm max-w-lg mx-auto my-6 sm:my-8">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3 sm:mb-4 text-2xl">
                   🔍
                 </div>
-                <h3 className="text-lg font-black text-neutral-900">No encontramos quioscos con estos filtros</h3>
-                <p className="text-xs text-neutral-500 mt-1 mb-6">
+                <h3 className="text-base sm:text-lg font-black text-neutral-900">No encontramos quioscos con estos filtros</h3>
+                <p className="text-xs text-neutral-500 mt-1 mb-5">
                   Prueba cambiando de campus o limpiando el texto de búsqueda.
                 </p>
                 <button
@@ -136,13 +137,13 @@ function MainContent() {
                     setSelectedCampus('todos');
                     setSearchQuery('');
                   }}
-                  className="bg-pedidosya-red text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-md"
+                  className="bg-pedidosya-red hover:bg-pedidosya-darkRed text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-md active:scale-95 transition"
                 >
                   Restablecer todos los filtros
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredKiosks.map(kiosk => (
                   <KioskCard key={kiosk.id} kiosk={kiosk} />
                 ))}
@@ -153,10 +154,10 @@ function MainContent() {
 
       </main>
 
-      {/* Footer (PedidosYa + PUCV vibes) */}
-      <footer className="bg-white border-t border-neutral-200 mt-16 pt-12 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-neutral-200 text-xs text-neutral-600">
+      {/* Footer */}
+      <footer className="bg-white border-t border-neutral-200 mt-12 sm:mt-16 pt-10 sm:pt-12 pb-8">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 pb-8 sm:pb-10 border-b border-neutral-200 text-xs text-neutral-600">
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-xl bg-pedidosya-red flex items-center justify-center text-white font-black text-xs">
@@ -170,7 +171,7 @@ function MainContent() {
                 Plataforma de reserva anticipada de comidas y pedidos para los quioscos de la Pontificia Universidad Católica de Valparaíso.
               </p>
               <div className="mt-3 flex items-center gap-1.5 text-pedidosya-pucv font-bold">
-                <MapPin className="w-3.5 h-3.5 text-pedidosya-red" />
+                <MapPin className="w-3.5 h-3.5 text-pedidosya-red shrink-0" />
                 <span>Región de Valparaíso, Chile</span>
               </div>
             </div>
@@ -205,14 +206,14 @@ function MainContent() {
               <div className="flex flex-col gap-2">
                 <button 
                   onClick={() => openKioskAuth('login')}
-                  className="bg-pedidosya-pucv hover:bg-[#003961] text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-sm"
+                  className="bg-pedidosya-pucv hover:bg-[#003961] active:scale-95 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-sm"
                 >
                   <KeyRound className="w-3.5 h-3.5 text-pedidosya-pucvGold" />
                   <span>Iniciar Sesión Modo Quiosco</span>
                 </button>
                 <button 
                   onClick={() => openKioskAuth('register')}
-                  className="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition"
+                  className="bg-neutral-100 hover:bg-neutral-200 active:scale-95 text-neutral-800 font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition"
                 >
                   <PlusCircle className="w-3.5 h-3.5 text-pedidosya-red" />
                   <span>Rellenar Formulario para Unirse</span>
@@ -221,9 +222,9 @@ function MainContent() {
             </div>
           </div>
 
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-400 gap-3">
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-400 gap-3 text-center sm:text-left">
             <p>© 2026 EatPUCV - Diseñado para la comunidad universitaria de Valparaíso y Viña del Mar.</p>
-            <p className="flex items-center gap-1">
+            <p className="flex items-center justify-center gap-1">
               <span>Hecho con</span>
               <Heart className="w-3.5 h-3.5 fill-pedidosya-red text-pedidosya-red" />
               <span>para estudiantes PUCV</span>
@@ -231,6 +232,9 @@ function MainContent() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Bottom Navigation Bar for Mobile and Small Tablets */}
+      <MobileBottomNav />
 
       {/* Global Modals & Drawers */}
       <KioskDetailModal />

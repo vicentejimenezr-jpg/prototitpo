@@ -186,13 +186,13 @@ export default function KioskAuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
       <div 
-        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-neutral-200 overflow-hidden transition-all my-8 relative flex flex-col max-h-[92vh]"
+        className="bg-white w-full max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl border border-neutral-200 overflow-hidden transition-all my-0 sm:my-8 relative flex flex-col h-[94vh] sm:h-auto sm:max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar with PedidosYa + PUCV Theme */}
-        <div className="bg-gradient-to-r from-pedidosya-pucv via-[#003961] to-pedidosya-pucv text-white p-5 sm:p-6 relative shrink-0">
+        <div className="bg-gradient-to-r from-pedidosya-pucv via-[#003961] to-pedidosya-pucv text-white p-4 sm:p-6 relative shrink-0">
           <button
             onClick={closeKioskAuth}
             className="absolute right-4 top-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition"
