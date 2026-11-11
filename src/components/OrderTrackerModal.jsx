@@ -153,23 +153,27 @@ export default function OrderTrackerModal() {
           {/* Reserved Items */}
           <div>
             <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-2">
-              Productos Reservados ({trackingOrder.items.length})
+              Productos Reservados ({(trackingOrder.items || []).length})
             </h4>
             <div className="space-y-2 bg-neutral-50/50 p-3 rounded-2xl border border-neutral-200/80">
-              {trackingOrder.items.map((item, idx) => (
+              {(trackingOrder.items || []).map((item, idx) => (
                 <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-neutral-200/50 last:border-none gap-2">
                   <div className="truncate">
-                    <span className="font-bold text-neutral-900">{item.quantity}x {item.name}</span>
+                    <span className="font-bold text-neutral-900">{item.quantity || 1}x {item.name || 'Producto'}</span>
                     {item.notes && (
                       <p className="text-[10px] text-neutral-500 italic truncate">"{item.notes}"</p>
                     )}
                   </div>
-                  <span className="font-bold text-neutral-800 shrink-0">${(item.price * item.quantity).toLocaleString('es-CL')}</span>
+                  <span className="font-bold text-neutral-800 shrink-0">
+                    ${((item.price || 0) * (item.quantity || 1)).toLocaleString('es-CL')}
+                  </span>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-2 text-xs sm:text-sm font-black text-neutral-900 border-t border-neutral-200">
-                <span>Total pagado ({trackingOrder.paymentMethod})</span>
-                <span className="text-pedidosya-red">${trackingOrder.total.toLocaleString('es-CL')}</span>
+                <span>Total pagado ({trackingOrder.paymentMethod || 'Efectivo'})</span>
+                <span className="text-pedidosya-red">
+                  ${(trackingOrder.total || 0).toLocaleString('es-CL')}
+                </span>
               </div>
             </div>
           </div>

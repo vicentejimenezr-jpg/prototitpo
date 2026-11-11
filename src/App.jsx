@@ -13,6 +13,7 @@ import ReservationModal from './components/ReservationModal';
 import OrderTrackerModal from './components/OrderTrackerModal';
 import KioskAdminPanel from './components/KioskAdminPanel';
 import KioskAuthModal from './components/KioskAuthModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Store, 
   MapPin, 
@@ -27,6 +28,10 @@ import {
 } from 'lucide-react';
 
 function MainContent() {
+  const app = useApp();
+  if (typeof window !== 'undefined') {
+    window.__EATPUCV__ = app;
+  }
   const { 
     filteredKiosks, 
     selectedCampus, 
@@ -39,7 +44,7 @@ function MainContent() {
     setSelectedCampus,
     openKioskAuth,
     isKioskAuthenticated
-  } = useApp();
+  } = app;
 
   const currentCampusObj = campuses.find(c => c.id === selectedCampus);
 
@@ -249,8 +254,10 @@ function MainContent() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <MainContent />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

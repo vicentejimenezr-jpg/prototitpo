@@ -454,25 +454,26 @@ export const AppProvider = ({ children }) => {
 
   // Create Reservation Order
   const createReservation = (reservationData) => {
+    if (!cart || cart.length === 0) return null;
     const randomDigits = Math.floor(100 + Math.random() * 900);
     const newOrderId = `PUCV-${randomDigits}`;
-    const firstCartItem = cart[0];
-    const kiosk = kiosks.find(k => k.id === firstCartItem.kioskId);
+    const firstCartItem = cart[0] || {};
+    const kiosk = (kiosks && kiosks.find(k => k && k.id === firstCartItem.kioskId)) || {};
 
     const newOrder = {
       id: newOrderId,
-      kioskId: kiosk?.id || firstCartItem.kioskId,
-      kioskName: kiosk?.name || firstCartItem.kioskName,
-      campusName: kiosk?.campusName || firstCartItem.campusName,
-      locationDetails: kiosk?.locationDetails || 'Campus PUCV',
+      kioskId: kiosk?.id || firstCartItem.kioskId || 'kiosk-central-1',
+      kioskName: kiosk?.name || firstCartItem.kioskName || 'Quiosco PUCV',
+      campusName: kiosk?.campusName || firstCartItem.campusName || 'Campus PUCV',
+      locationDetails: kiosk?.locationDetails || 'Punto de entrega en campus',
       items: [...cart],
-      total: cartTotal,
-      customerName: reservationData.customerName,
-      customerEmail: reservationData.customerEmail,
-      customerPhone: reservationData.customerPhone,
-      pickupTime: reservationData.pickupTime,
-      pickupTimeStr: reservationData.pickupTimeStr,
-      paymentMethod: reservationData.paymentMethod,
+      total: cartTotal || 0,
+      customerName: reservationData.customerName || 'Estudiante PUCV',
+      customerEmail: reservationData.customerEmail || 'estudiante@pucv.cl',
+      customerPhone: reservationData.customerPhone || '+56 9 0000 0000',
+      pickupTime: reservationData.pickupTime || 'Horario programado',
+      pickupTimeStr: reservationData.pickupTimeStr || 'Horario programado',
+      paymentMethod: reservationData.paymentMethod || 'Efectivo',
       orderNote: reservationData.orderNote || '',
       status: 'recibido',
       createdAt: new Date().toISOString()

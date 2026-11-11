@@ -25,7 +25,10 @@ export default function ReservationModal() {
   } = useApp();
 
   const [selectedTimeOption, setSelectedTimeOption] = useState('recreo-1');
-  const [customTime, setCustomTime] = useState('13:30');
+  const [customTime, setCustomTime] = useState(() => {
+    const d = new Date(Date.now() + 30 * 60 * 1000);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
   const [customerName, setCustomerName] = useState('Vicente Morales');
   const [customerEmail, setCustomerEmail] = useState('vicente.morales@pucv.cl');
   const [customerPhone, setCustomerPhone] = useState('+56 9 8765 4321');
@@ -33,9 +36,7 @@ export default function ReservationModal() {
   const [orderNote, setOrderNote] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  if (!isCheckoutOpen || !cart || cart.length === 0) return null;
-
-  const firstItem = cart[0] || {};
+  const firstItem = (cart && cart.length > 0) ? cart[0] : {};
   const currentKiosk = (kiosks && kiosks.find(k => k && k.id === firstItem?.kioskId)) || (kiosks && kiosks[0]) || {};
 
   // 1. Check if cart has "Comida Lenta" (churrascos, mechada, a la plancha, etc.)
@@ -94,7 +95,7 @@ export default function ReservationModal() {
     };
   });
 
-  // Ensure selected option is not a disabled option
+  // Ensure selected option is not a disabled option & customTime is upcoming
   useEffect(() => {
     if (!isCheckoutOpen) return;
     const currentSlotObj = evaluatedSlots.find(s => s.id === selectedTimeOption);
@@ -106,6 +107,16 @@ export default function ReservationModal() {
       } else {
         setSelectedTimeOption('custom');
       }
+    }
+
+    // Auto-adjust customTime if current custom time has passed
+    const [cH, cM] = (customTime || '').split(':').map(Number);
+    const customMin = (cH || 0) * 60 + (cM || 0);
+    if (customMin <= currentTotalMinutes) {
+      const targetMin = currentTotalMinutes + (hasSlowFood ? 30 : 20);
+      const h = Math.floor((targetMin / 60) % 24);
+      const m = targetMin % 60;
+      setCustomTime(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
     }
   }, [isCheckoutOpen, selectedTimeOption, currentTotalMinutes, hasSlowFood, allowAsapPickup, isAsapFull]);
 
@@ -152,6 +163,8 @@ export default function ReservationModal() {
       orderNote
     });
   };
+
+  if (!isCheckoutOpen || !cart || cart.length === 0) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-fadeIn">
