@@ -8,21 +8,17 @@ import {
   Mail, 
   Phone, 
   CheckCircle, 
-  AlertCircle,
-  Flame,
-  Info,
-  Calendar,
-  AlertTriangle
+  AlertCircle
 } from 'lucide-react';
 
 export default function ReservationModal() {
   const { 
     isCheckoutOpen, 
     setIsCheckoutOpen, 
-    cart, 
-    cartTotal, 
+    cart = [], 
+    cartTotal = 0, 
     createReservation,
-    kiosks,
+    kiosks = [],
     getKioskActiveAsapOrders,
     getCurrentTime,
     setSimulatedTime
@@ -37,27 +33,37 @@ export default function ReservationModal() {
   const [orderNote, setOrderNote] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  if (!isCheckoutOpen || cart.length === 0) return null;
+  if (!isCheckoutOpen || !cart || cart.length === 0) return null;
 
-  const firstItem = cart[0];
-  const currentKiosk = kiosks.find(k => k.id === firstItem?.kioskId) || kiosks[0];
+  const firstItem = cart[0] || {};
+  const currentKiosk = (kiosks && kiosks.find(k => k && k.id === firstItem?.kioskId)) || (kiosks && kiosks[0]) || {};
 
   // 1. Check if cart has "Comida Lenta" (churrascos, mechada, a la plancha, etc.)
-  const hasSlowFood = cart.some(item => item.isSlowFood || item.category === 'comida_lenta');
-  const slowFoodItems = cart.filter(item => item.isSlowFood || item.category === 'comida_lenta');
+  const hasSlowFood = cart.some(item => item && (item.isSlowFood || item.category === 'comida_lenta'));
+  const slowFoodItems = cart.filter(item => item && (item.isSlowFood || item.category === 'comida_lenta'));
 
   // 2. Kiosk ASAP capacity setting (configured from 1 to 15 in Kiosk Mode)
   const maxAsapOrders = currentKiosk?.maxAsapOrders || 5;
   const allowAsapPickup = currentKiosk?.allowAsapPickup ?? true;
-  const activeAsapOrdersCount = firstItem ? getKioskActiveAsapOrders(firstItem.kioskId) : 0;
+  const activeAsapOrdersCount = (firstItem?.kioskId && typeof getKioskActiveAsapOrders === 'function') 
+    ? getKioskActiveAsapOrders(firstItem.kioskId) 
+    : 0;
   const isAsapFull = activeAsapOrdersCount >= maxAsapOrders;
 
   // 3. Current system time & minutes from midnight
-  const currentTime = getCurrentTime();
-  const currentTotalMinutes = currentTime.hour * 60 + currentTime.minute;
+  const now = new Date();
+  const defaultTime = {
+    hour: now.getHours(),
+    minute: now.getMinutes(),
+    timeStr: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+    isSimulated: false
+  };
+
+  const currentTime = (typeof getCurrentTime === 'function' ? getCurrentTime() : null) || defaultTime;
+  const currentTotalMinutes = (currentTime?.hour ?? now.getHours()) * 60 + (currentTime?.minute ?? now.getMinutes());
 
   // Evaluate each time slot for availability based on time, slow food, and kiosk capacity
-  const evaluatedSlots = PICKUP_TIME_OPTIONS.map(slot => {
+  const evaluatedSlots = (PICKUP_TIME_OPTIONS || []).map(slot => {
     let isDisabled = false;
     let reason = '';
 
@@ -77,7 +83,7 @@ export default function ReservationModal() {
       // If current time is equal or past the slot time, it is disabled!
       if (currentTotalMinutes >= slotTotalMinutes) {
         isDisabled = true;
-        reason = `Horario pasado (${slot.timeStr})`;
+        reason = `Horario pasado (${slot.timeStr || ''})`;
       }
     }
 
@@ -90,6 +96,7 @@ export default function ReservationModal() {
 
   // Ensure selected option is not a disabled option
   useEffect(() => {
+    if (!isCheckoutOpen) return;
     const currentSlotObj = evaluatedSlots.find(s => s.id === selectedTimeOption);
     if (!currentSlotObj || currentSlotObj.isDisabled) {
       // Pick first upcoming valid slot or fallback to custom
@@ -100,7 +107,7 @@ export default function ReservationModal() {
         setSelectedTimeOption('custom');
       }
     }
-  }, [selectedTimeOption, currentTotalMinutes, hasSlowFood, allowAsapPickup, isAsapFull]);
+  }, [isCheckoutOpen, selectedTimeOption, currentTotalMinutes, hasSlowFood, allowAsapPickup, isAsapFull]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -116,7 +123,7 @@ export default function ReservationModal() {
     }
 
     if (selectedTimeOption === 'custom') {
-      const [cH, cM] = customTime.split(':').map(Number);
+      const [cH, cM] = (customTime || '13:30').split(':').map(Number);
       const customMin = (cH || 0) * 60 + (cM || 0);
       const minRequired = currentTotalMinutes + (hasSlowFood ? 25 : 10);
       if (customMin <= currentTotalMinutes) {
@@ -133,13 +140,13 @@ export default function ReservationModal() {
       ? `${customTime} hrs` 
       : timeObj?.timeStr || 'Horario programado';
 
-    const paymentObj = PAYMENT_METHODS.find(p => p.id === selectedPayment);
+    const paymentObj = (PAYMENT_METHODS || []).find(p => p.id === selectedPayment);
 
     createReservation({
       customerName,
       customerEmail,
       customerPhone,
-      pickupTime: selectedTimeOption === 'custom' ? `Personalizado (${customTime} hrs)` : timeObj?.label,
+      pickupTime: selectedTimeOption === 'custom' ? `Personalizado (${customTime} hrs)` : (timeObj?.label || 'Horario programado'),
       pickupTimeStr,
       paymentMethod: paymentObj ? `${paymentObj.name} (${paymentObj.badge})` : 'Efectivo',
       orderNote
@@ -164,7 +171,7 @@ export default function ReservationModal() {
             </div>
             <h2 className="text-lg sm:text-2xl font-black mt-1 leading-tight">Reserva de Comida en Quiosco</h2>
             <p className="text-[11px] sm:text-xs text-white/90 mt-0.5 truncate max-w-xs sm:max-w-md">
-              Retiro en: <strong>{firstItem?.kioskName}</strong> • {firstItem?.campusName}
+              Retiro en: <strong>{firstItem?.kioskName || 'Quiosco'}</strong> • {firstItem?.campusName || 'PUCV'}
             </p>
           </div>
           <button
@@ -196,7 +203,7 @@ export default function ReservationModal() {
                     Pedido con Comida Lenta (A la Plancha)
                   </h4>
                   <p className="text-[11px] sm:text-xs text-amber-800 mt-1 leading-relaxed">
-                    Tu pedido incluye <strong>{slowFoodItems.map(i => i.name).join(', ')}</strong>. Al ser comida cocinada a la plancha con tiempo de preparación de 20 a 25 min, <strong>la opción "Lo antes posible" está desactivada</strong>. Selecciona un recreo u horario posterior para tenerlo recién hecho al llegar.
+                    Tu pedido incluye <strong>{slowFoodItems.map(i => i?.name || 'Plato').join(', ')}</strong>. Al ser comida cocinada a la plancha con tiempo de preparación de 20 a 25 min, <strong>la opción "Lo antes posible" está desactivada</strong>. Selecciona un recreo u horario posterior para tenerlo recién hecho al llegar.
                   </p>
                 </div>
               </div>
@@ -221,9 +228,9 @@ export default function ReservationModal() {
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-pedidosya-red shrink-0" />
                 <span className="text-neutral-700">
-                  Hora actual: <strong className="text-neutral-950 font-black text-sm">{currentTime.timeStr} hrs</strong>
+                  Hora actual: <strong className="text-neutral-950 font-black text-sm">{currentTime?.timeStr || '12:00'} hrs</strong>
                 </span>
-                {currentTime.isSimulated && (
+                {currentTime?.isSimulated && (
                   <span className="bg-amber-200 text-amber-900 text-[10px] font-black px-1.5 py-0.5 rounded">
                     Simulación activa
                   </span>
@@ -235,9 +242,9 @@ export default function ReservationModal() {
                 <span className="text-neutral-500 font-medium">Probar hora:</span>
                 <button
                   type="button"
-                  onClick={() => setSimulatedTime({ hour: 10, minute: 30 })}
+                  onClick={() => typeof setSimulatedTime === 'function' && setSimulatedTime({ hour: 10, minute: 30 })}
                   className={`px-2 py-0.5 rounded-lg font-bold transition active:scale-95 ${
-                    currentTime.hour === 10 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                    currentTime?.hour === 10 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
                   }`}
                   title="Simular 10:30 (Todo disponible)"
                 >
@@ -245,9 +252,9 @@ export default function ReservationModal() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSimulatedTime({ hour: 12, minute: 45 })}
+                  onClick={() => typeof setSimulatedTime === 'function' && setSimulatedTime({ hour: 12, minute: 45 })}
                   className={`px-2 py-0.5 rounded-lg font-black transition active:scale-95 ${
-                    currentTime.hour === 12 && currentTime.minute === 45 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-300'
+                    currentTime?.hour === 12 && currentTime?.minute === 45 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-300'
                   }`}
                   title="Ejemplo solicitado: 12:45 (desactiva 11:15 y 12:45)"
                 >
@@ -255,9 +262,9 @@ export default function ReservationModal() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSimulatedTime({ hour: 14, minute: 0 })}
+                  onClick={() => typeof setSimulatedTime === 'function' && setSimulatedTime({ hour: 14, minute: 0 })}
                   className={`px-2 py-0.5 rounded-lg font-bold transition active:scale-95 ${
-                    currentTime.hour === 14 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                    currentTime?.hour === 14 ? 'bg-pedidosya-red text-white shadow-2xs' : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
                   }`}
                   title="Simular 14:00 (Desactiva almuerzos)"
                 >
@@ -265,9 +272,9 @@ export default function ReservationModal() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSimulatedTime(null)}
+                  onClick={() => typeof setSimulatedTime === 'function' && setSimulatedTime(null)}
                   className={`px-2 py-0.5 rounded-lg font-bold transition active:scale-95 ${
-                    !currentTime.isSimulated ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-200 border border-neutral-200'
+                    !currentTime?.isSimulated ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-200 border border-neutral-200'
                   }`}
                   title="Restablecer a la hora actual de tu reloj"
                 >
@@ -322,7 +329,7 @@ export default function ReservationModal() {
               <div className="mt-3 p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <label className="text-xs font-bold text-neutral-800 block">Elige tu hora exacta de retiro:</label>
-                  <p className="text-[11px] text-neutral-500">Debe ser posterior a las {currentTime.timeStr} hrs</p>
+                  <p className="text-[11px] text-neutral-500">Debe ser posterior a las {currentTime?.timeStr || '12:00'} hrs</p>
                 </div>
                 <input
                   type="time"
@@ -405,7 +412,7 @@ export default function ReservationModal() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-              {PAYMENT_METHODS.map((method) => {
+              {(PAYMENT_METHODS || []).map((method) => {
                 const isSelected = selectedPayment === method.id;
                 return (
                   <button
@@ -453,18 +460,22 @@ export default function ReservationModal() {
               {cart.map((item, i) => (
                 <div key={i} className="flex justify-between text-xs text-neutral-700 gap-2">
                   <span className="truncate">
-                    {item.quantity}x {item.name}
+                    {item.quantity || 1}x {item.name || 'Producto'}
                     {(item.isSlowFood || item.category === 'comida_lenta') && (
                       <span className="text-rose-600 font-bold ml-1 text-[10px]">(Plancha)</span>
                     )}
                   </span>
-                  <span className="font-bold shrink-0">${item.subtotal.toLocaleString('es-CL')}</span>
+                  <span className="font-bold shrink-0">
+                    ${(item.subtotal || ((item.price || 0) * (item.quantity || 1)) || 0).toLocaleString('es-CL')}
+                  </span>
                 </div>
               ))}
             </div>
             <div className="pt-2 border-t border-neutral-200 flex justify-between items-center text-sm font-black text-neutral-900">
               <span>Total a pagar</span>
-              <span className="text-pedidosya-red text-base sm:text-lg">${cartTotal.toLocaleString('es-CL')}</span>
+              <span className="text-pedidosya-red text-base sm:text-lg">
+                ${(cartTotal || 0).toLocaleString('es-CL')}
+              </span>
             </div>
           </div>
 
@@ -474,7 +485,7 @@ export default function ReservationModal() {
             className="w-full bg-pedidosya-red hover:bg-pedidosya-darkRed active:scale-[0.98] text-white py-3.5 sm:py-4 rounded-2xl font-black text-sm sm:text-base shadow-xl shadow-pedidosya-red/30 flex items-center justify-center gap-2 transition"
           >
             <CheckCircle className="w-5 h-5" />
-            <span>Confirmar Reserva (${cartTotal.toLocaleString('es-CL')})</span>
+            <span>Confirmar Reserva (${(cartTotal || 0).toLocaleString('es-CL')})</span>
           </button>
         </form>
 

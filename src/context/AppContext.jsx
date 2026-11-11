@@ -542,12 +542,14 @@ export const AppProvider = ({ children }) => {
 
   // Helper to count active ASAP orders for a kiosk
   const getKioskActiveAsapOrders = (kioskId) => {
-    return orders.filter(
-      o => o.kioskId === kioskId &&
-      o.status !== 'entregado' &&
-      o.status !== 'cancelado' &&
-      (o.pickupTime?.toLowerCase().includes('antes') || o.pickupTimeStr?.toLowerCase().includes('min'))
-    ).length;
+    if (!orders || !Array.isArray(orders)) return 0;
+    return orders.filter(o => {
+      if (!o || o.kioskId !== kioskId) return false;
+      if (o.status === 'entregado' || o.status === 'cancelado') return false;
+      const pt = typeof o.pickupTime === 'string' ? o.pickupTime.toLowerCase() : '';
+      const pts = typeof o.pickupTimeStr === 'string' ? o.pickupTimeStr.toLowerCase() : '';
+      return pt.includes('antes') || pts.includes('min') || pt.includes('inmediato');
+    }).length;
   };
 
   // Real-time Clock & Simulated Time for Testing (e.g. Test 12:45)
