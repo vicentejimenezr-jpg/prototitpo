@@ -1,17 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { INITIAL_KIOSKS, CAMPUSES } from '../data/mockData';
+import { INITIAL_KIOSKS, CAMPUSES, DEFAULT_TIME_SLOT_CAPACITIES } from '../data/mockData';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  // Load kiosks from localStorage or initial (merged with latest categories)
+  // Load kiosks from localStorage or initial (merged with latest categories and slot capacities)
   const [kiosks, setKiosks] = useState(() => {
     try {
       const saved = localStorage.getItem('pucv_kiosks_v3');
-      if (saved) return JSON.parse(saved);
-      return INITIAL_KIOSKS;
+      const loaded = saved ? JSON.parse(saved) : INITIAL_KIOSKS;
+      return (loaded || []).map(k => ({
+        ...k,
+        timeSlotCapacities: { ...DEFAULT_TIME_SLOT_CAPACITIES, ...(k.timeSlotCapacities || {}) }
+      }));
     } catch (e) {
-      return INITIAL_KIOSKS;
+      return INITIAL_KIOSKS.map(k => ({
+        ...k,
+        timeSlotCapacities: { ...DEFAULT_TIME_SLOT_CAPACITIES, ...(k.timeSlotCapacities || {}) }
+      }));
     }
   });
 
@@ -471,6 +477,7 @@ export const AppProvider = ({ children }) => {
       customerName: reservationData.customerName || 'Estudiante PUCV',
       customerEmail: reservationData.customerEmail || 'estudiante@pucv.cl',
       customerPhone: reservationData.customerPhone || '+56 9 0000 0000',
+      pickupSlotId: reservationData.pickupSlotId || reservationData.selectedTimeOption || null,
       pickupTime: reservationData.pickupTime || 'Horario programado',
       pickupTimeStr: reservationData.pickupTimeStr || 'Horario programado',
       paymentMethod: reservationData.paymentMethod || 'Efectivo',
@@ -550,6 +557,85 @@ export const AppProvider = ({ children }) => {
       const pt = typeof o.pickupTime === 'string' ? o.pickupTime.toLowerCase() : '';
       const pts = typeof o.pickupTimeStr === 'string' ? o.pickupTimeStr.toLowerCase() : '';
       return pt.includes('antes') || pts.includes('min') || pt.includes('inmediato');
+    }).length;
+  };
+
+  // Vendor action: Add new product to kiosk menu
+  const addProductToKiosk = (kioskId, productData) => {
+    const newProdId = `p-${kioskId}-${Date.now()}`;
+    const newProduct = {
+      id: newProdId,
+      name: productData.name.trim(),
+      description: productData.description?.trim() || '',
+      price: Number(productData.price) || 1000,
+      category: productData.category || 'completos',
+      image: productData.image?.trim() || 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80',
+      available: true,
+      isSlowFood: Boolean(productData.isSlowFood || productData.category === 'comida_lenta'),
+      prepTimeMinutes: Number(productData.prepTimeMinutes) || (productData.isSlowFood || productData.category === 'comida_lenta' ? 25 : 8),
+      acceptsJunaeb: productData.acceptsJunaeb ?? true,
+      isCustomCreated: true
+    };
+
+    setKiosks(prev =>
+      prev.map(k => {
+        if (k.id !== kioskId) return k;
+        return {
+          ...k,
+          menu: [newProduct, ...k.menu]
+        };
+      })
+    );
+
+    return newProduct;
+  };
+
+  // Vendor action: Delete product from kiosk menu
+  const deleteProductFromKiosk = (kioskId, productId) => {
+    setKiosks(prev =>
+      prev.map(k => {
+        if (k.id !== kioskId) return k;
+        return {
+          ...k,
+          menu: k.menu.filter(p => p.id !== productId)
+        };
+      })
+    );
+  };
+
+  // Vendor action: Update slot capacities for a kiosk
+  const updateKioskSlotCapacity = (kioskId, slotId, newCapacity) => {
+    const validCap = Math.max(1, Math.min(30, Number(newCapacity) || 8));
+    setKiosks(prev =>
+      prev.map(k => {
+        if (k.id !== kioskId) return k;
+        const currentCapacities = k.timeSlotCapacities || { ...DEFAULT_TIME_SLOT_CAPACITIES };
+        return {
+          ...k,
+          timeSlotCapacities: {
+            ...currentCapacities,
+            [slotId]: validCap
+          }
+        };
+      })
+    );
+  };
+
+  // Helper to count active orders for a specific time slot in a kiosk
+  const getKioskSlotOccupancy = (kioskId, slotId) => {
+    if (!orders || !Array.isArray(orders)) return 0;
+    return orders.filter(o => {
+      if (!o || o.kioskId !== kioskId) return false;
+      if (o.status === 'entregado' || o.status === 'cancelado') return false;
+      if (o.pickupSlotId && o.pickupSlotId === slotId) return true;
+      const pt = typeof o.pickupTime === 'string' ? o.pickupTime.toLowerCase() : '';
+      const pts = typeof o.pickupTimeStr === 'string' ? o.pickupTimeStr.toLowerCase() : '';
+      if (slotId === 'recreo-1' && (pt.includes('11:15') || pts.includes('11:15'))) return true;
+      if (slotId === 'almuerzo-1' && (pt.includes('12:45') || pts.includes('12:45'))) return true;
+      if (slotId === 'almuerzo-2' && (pt.includes('13:30') || pts.includes('13:30'))) return true;
+      if (slotId === 'recreo-tarde' && (pt.includes('15:45') || pts.includes('15:45'))) return true;
+      if (slotId === 'salida' && (pt.includes('17:30') || pts.includes('17:30'))) return true;
+      return false;
     }).length;
   };
 
@@ -658,6 +744,10 @@ export const AppProvider = ({ children }) => {
         toggleKioskOpen,
         updateKioskAsapSettings,
         getKioskActiveAsapOrders,
+        addProductToKiosk,
+        deleteProductFromKiosk,
+        updateKioskSlotCapacity,
+        getKioskSlotOccupancy,
         simulatedTime,
         setSimulatedTime,
         getCurrentTime,

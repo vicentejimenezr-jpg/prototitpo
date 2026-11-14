@@ -20,6 +20,7 @@ export default function ReservationModal() {
     createReservation,
     kiosks = [],
     getKioskActiveAsapOrders,
+    getKioskSlotOccupancy,
     getCurrentTime,
     setSimulatedTime
   } = useApp();
@@ -64,11 +65,17 @@ export default function ReservationModal() {
   const currentTotalMinutes = (currentTime?.hour ?? now.getHours()) * 60 + (currentTime?.minute ?? now.getMinutes());
 
   // Evaluate each time slot for availability based on time, slow food, and kiosk capacity
+  const slotCapacities = currentKiosk?.timeSlotCapacities || {};
+
   const evaluatedSlots = (PICKUP_TIME_OPTIONS || []).map(slot => {
     let isDisabled = false;
     let reason = '';
+    let capacity = undefined;
+    let occupied = 0;
 
     if (slot.isAsap) {
+      capacity = maxAsapOrders;
+      occupied = activeAsapOrdersCount;
       if (hasSlowFood) {
         isDisabled = true;
         reason = 'No disponible para comida lenta (cocción 20+ min)';
@@ -80,18 +87,28 @@ export default function ReservationModal() {
         reason = `Cupos llenos en cocina (${activeAsapOrdersCount}/${maxAsapOrders})`;
       }
     } else if (slot.targetHour !== undefined) {
+      capacity = slotCapacities[slot.id] ?? 8;
+      occupied = (typeof getKioskSlotOccupancy === 'function' && firstItem?.kioskId)
+        ? getKioskSlotOccupancy(firstItem.kioskId, slot.id)
+        : 0;
+
       const slotTotalMinutes = slot.targetHour * 60 + slot.targetMinute;
       // If current time is equal or past the slot time, it is disabled!
       if (currentTotalMinutes >= slotTotalMinutes) {
         isDisabled = true;
         reason = `Horario pasado (${slot.timeStr || ''})`;
+      } else if (occupied >= capacity) {
+        isDisabled = true;
+        reason = `Cupos agotados en quiosco (${occupied}/${capacity} reservas)`;
       }
     }
 
     return {
       ...slot,
       isDisabled,
-      reason
+      reason,
+      capacity,
+      occupied
     };
   });
 
@@ -157,6 +174,7 @@ export default function ReservationModal() {
       customerName,
       customerEmail,
       customerPhone,
+      pickupSlotId: selectedTimeOption,
       pickupTime: selectedTimeOption === 'custom' ? `Personalizado (${customTime} hrs)` : (timeObj?.label || 'Horario programado'),
       pickupTimeStr,
       paymentMethod: paymentObj ? `${paymentObj.name} (${paymentObj.badge})` : 'Efectivo',
@@ -301,6 +319,9 @@ export default function ReservationModal() {
               {evaluatedSlots.map((slot) => {
                 const isSelected = selectedTimeOption === slot.id;
                 const isDisabled = slot.isDisabled;
+                const hasCapacity = slot.capacity !== undefined;
+                const isFull = hasCapacity && slot.occupied >= slot.capacity;
+                const remaining = hasCapacity ? Math.max(0, slot.capacity - slot.occupied) : null;
 
                 return (
                   <button
@@ -308,7 +329,7 @@ export default function ReservationModal() {
                     key={slot.id}
                     disabled={isDisabled}
                     onClick={() => !isDisabled && setSelectedTimeOption(slot.id)}
-                    className={`p-3 sm:p-3.5 rounded-xl border text-left text-xs font-bold flex items-center justify-between transition min-h-[48px] ${
+                    className={`p-3 sm:p-3.5 rounded-xl border text-left text-xs font-bold flex items-start justify-between transition min-h-[58px] ${
                       isDisabled
                         ? 'opacity-40 bg-neutral-100 text-neutral-400 border-dashed border-neutral-300 cursor-not-allowed'
                         : isSelected
@@ -316,22 +337,42 @@ export default function ReservationModal() {
                         : 'border-neutral-200 hover:bg-neutral-50 text-neutral-700 active:scale-[0.99]'
                     }`}
                   >
-                    <div className="flex items-center gap-2 min-w-0 pr-1">
-                      <Clock className={`w-3.5 h-3.5 shrink-0 ${isDisabled ? 'text-neutral-400' : 'text-neutral-600'}`} />
-                      <div className="min-w-0">
-                        <span className={`block truncate ${isDisabled ? 'line-through text-neutral-400' : ''}`}>
-                          {slot.label}
-                        </span>
-                        {isDisabled && (
-                          <span className="text-[10px] text-rose-600 font-bold block truncate">
+                    <div className="flex items-start gap-2 min-w-0 pr-1 flex-1">
+                      <Clock className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDisabled ? 'text-neutral-400' : 'text-neutral-600'}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                          <span className={`block truncate ${isDisabled ? 'line-through text-neutral-400' : ''}`}>
+                            {slot.label}
+                          </span>
+                          
+                          {/* Cupos badge */}
+                          {hasCapacity && (
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${
+                              isFull
+                                ? 'bg-rose-100 text-rose-800'
+                                : remaining <= 2
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}>
+                              {slot.occupied}/{slot.capacity} cupos
+                            </span>
+                          )}
+                        </div>
+
+                        {isDisabled ? (
+                          <span className="text-[10px] text-rose-600 font-bold block truncate mt-0.5">
                             ✕ {slot.reason}
                           </span>
-                        )}
+                        ) : hasCapacity ? (
+                          <span className="text-[10px] text-neutral-500 font-medium block truncate mt-0.5">
+                            {remaining === 1 ? '🔥 ¡Último cupo disponible!' : `🟢 ${remaining} cupos disponibles`}
+                          </span>
+                        ) : null}
                       </div>
                     </div>
 
                     {isSelected && !isDisabled && (
-                      <CheckCircle className="w-4 h-4 fill-pedidosya-red text-white shrink-0" />
+                      <CheckCircle className="w-4 h-4 fill-pedidosya-red text-white shrink-0 ml-1.5 mt-0.5" />
                     )}
                   </button>
                 );

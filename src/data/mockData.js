@@ -634,3 +634,68 @@ export const PAYMENT_METHODS = [
   { id: 'debito_credito', name: 'Tarjeta Débito / Crédito (Webpay)', icon: '🏧', badge: 'Online', desc: 'Transbank Redcompra' },
   { id: 'efectivo', name: 'Efectivo al Retirar en Quiosco', icon: '💵', badge: 'En Caja', desc: 'Paga directo en el mostrador del quiosco' }
 ];
+
+export const DEFAULT_TIME_SLOT_CAPACITIES = {
+  'recreo-1': 8,
+  'almuerzo-1': 10,
+  'almuerzo-2': 10,
+  'recreo-tarde': 6,
+  'salida': 8
+};
+
+export const PRODUCT_IMAGE_PRESETS = [
+  {
+    id: 'churrasco',
+    name: 'Churrasco / Mechada',
+    category: 'comida_lenta',
+    url: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'hamburguesa',
+    name: 'Hamburguesa Casera',
+    category: 'comida_lenta',
+    url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'chorrillana',
+    name: 'Chorrillana Porteña',
+    category: 'comida_lenta',
+    url: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'completo',
+    name: 'Completo / Italiano',
+    category: 'completos',
+    url: 'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'sandwich',
+    name: 'Sándwich Tostado',
+    category: 'completos',
+    url: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'cafe',
+    name: 'Café Grano / Especial',
+    category: 'cafeteria',
+    url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'dulce',
+    name: 'Muffin / Croissant',
+    category: 'dulces',
+    url: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'bebida',
+    name: 'Jugo / Bebida Helada',
+    category: 'bebidas',
+    url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'saludable',
+    name: 'Bowl Saludable / Ensalada',
+    category: 'saludable',
+    url: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80'
+  }
+];
