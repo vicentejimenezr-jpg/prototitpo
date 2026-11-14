@@ -147,18 +147,18 @@ export default function InteractiveMap() {
   }, [filteredKiosks, selectedCampus, campuses, setActiveKiosk]);
 
   return (
-    <div className="relative w-full h-[360px] sm:h-[450px] md:h-[520px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-neutral-200">
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
+    <div className="relative isolate z-0 w-full h-[360px] sm:h-[450px] md:h-[520px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-neutral-200">
+      <div ref={mapContainerRef} className="relative isolate z-0 w-full h-full" />
       
-      {/* Floating map info pill */}
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-[400] bg-white/95 backdrop-blur-md px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl shadow-md border border-neutral-200/80 flex items-center gap-2 text-[11px] sm:text-xs text-neutral-700 max-w-[calc(100%-24px)]">
+      {/* Floating map info pill (contained within map component, never overlaps modals or drawers) */}
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 pointer-events-none select-none bg-white/95 backdrop-blur-md px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl shadow-md border border-neutral-200/80 flex items-center gap-2 text-[11px] sm:text-xs text-neutral-700 max-w-[calc(100%-24px)]">
         <span className="w-2 h-2 rounded-full bg-pedidosya-red animate-ping shrink-0" />
         <span className="truncate">
           <strong className="text-neutral-900">{filteredKiosks.length} Quioscos</strong> en Valparaíso & Viña
         </span>
       </div>
 
-      <div className="absolute bottom-3 left-3 z-[400] bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] text-neutral-500 shadow border border-neutral-200 hidden sm:block">
+      <div className="absolute bottom-3 left-3 z-10 pointer-events-none select-none bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] text-neutral-500 shadow border border-neutral-200 hidden sm:block">
         Toca cualquier quiosco en el mapa para ver su carta y reservar
       </div>
     </div>
