@@ -64,6 +64,13 @@ export default function ReservationModal() {
   const currentTime = (typeof getCurrentTime === 'function' ? getCurrentTime() : null) || defaultTime;
   const currentTotalMinutes = (currentTime?.hour ?? now.getHours()) * 60 + (currentTime?.minute ?? now.getMinutes());
 
+  // Minimum required time for custom pickup: at least 15 min after current or simulated time (or 20 min if slow food)
+  const minPrepMinutes = hasSlowFood ? 20 : 15;
+  const minCustomTotalMinutes = currentTotalMinutes + minPrepMinutes;
+  const minCustomHour = Math.floor((minCustomTotalMinutes / 60) % 24);
+  const minCustomMinute = minCustomTotalMinutes % 60;
+  const minCustomTimeStr = `${String(minCustomHour).padStart(2, '0')}:${String(minCustomMinute).padStart(2, '0')}`;
+
   // Evaluate each time slot for availability based on time, slow food, and kiosk capacity
   const slotCapacities = currentKiosk?.timeSlotCapacities || {};
 
@@ -126,16 +133,13 @@ export default function ReservationModal() {
       }
     }
 
-    // Auto-adjust customTime if current custom time has passed
+    // Auto-adjust customTime if current custom time is earlier than the required 15 min offset from current or simulated time
     const [cH, cM] = (customTime || '').split(':').map(Number);
     const customMin = (cH || 0) * 60 + (cM || 0);
-    if (customMin <= currentTotalMinutes) {
-      const targetMin = currentTotalMinutes + (hasSlowFood ? 30 : 20);
-      const h = Math.floor((targetMin / 60) % 24);
-      const m = targetMin % 60;
-      setCustomTime(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+    if (customMin < minCustomTotalMinutes) {
+      setCustomTime(minCustomTimeStr);
     }
-  }, [isCheckoutOpen, selectedTimeOption, currentTotalMinutes, hasSlowFood, allowAsapPickup, isAsapFull]);
+  }, [isCheckoutOpen, selectedTimeOption, currentTotalMinutes, minCustomTotalMinutes, minCustomTimeStr, hasSlowFood, allowAsapPickup, isAsapFull]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -151,15 +155,14 @@ export default function ReservationModal() {
     }
 
     if (selectedTimeOption === 'custom') {
-      const [cH, cM] = (customTime || '13:30').split(':').map(Number);
+      const [cH, cM] = (customTime || minCustomTimeStr).split(':').map(Number);
       const customMin = (cH || 0) * 60 + (cM || 0);
-      const minRequired = currentTotalMinutes + (hasSlowFood ? 25 : 10);
       if (customMin <= currentTotalMinutes) {
-        setErrorMessage(`La hora personalizada (${customTime}) ya pasó. Elige una hora futura (después de las ${currentTime.timeStr} hrs).`);
+        setErrorMessage(`La hora personalizada (${customTime} hrs) ya pasó. Debe ser al menos 15 minutos después de la hora ${currentTime?.isSimulated ? 'simulada' : 'actual'} (posterior a las ${minCustomTimeStr} hrs).`);
         return;
       }
-      if (customMin < minRequired) {
-        setErrorMessage(`Por favor da al menos ${hasSlowFood ? '25' : '10'} minutos de preparación. Hora mínima sugerida: ${Math.floor(minRequired / 60)}:${String(minRequired % 60).padStart(2, '0')} hrs.`);
+      if (customMin < minCustomTotalMinutes) {
+        setErrorMessage(`Debe ser al menos 15 minutos después de la hora ${currentTime?.isSimulated ? 'simulada' : 'actual'}. Hora mínima válida: ${minCustomTimeStr} hrs.`);
         return;
       }
     }
@@ -380,16 +383,19 @@ export default function ReservationModal() {
             </div>
 
             {selectedTimeOption === 'custom' && (
-              <div className="mt-3 p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="mt-3 p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
                 <div>
                   <label className="text-xs font-bold text-neutral-800 block">Elige tu hora exacta de retiro:</label>
-                  <p className="text-[11px] text-neutral-500">Debe ser posterior a las {currentTime?.timeStr || '12:00'} hrs</p>
+                  <p className="text-[11px] text-neutral-600 mt-0.5">
+                    Debe ser al menos 15 minutos después de la hora {currentTime?.isSimulated ? 'simulada' : 'actual'} (posterior a las <strong className="text-neutral-900 font-black">{minCustomTimeStr} hrs</strong>)
+                  </p>
                 </div>
                 <input
                   type="time"
+                  min={minCustomTimeStr}
                   value={customTime}
                   onChange={(e) => setCustomTime(e.target.value)}
-                  className="bg-white px-3 py-2 rounded-xl border border-neutral-300 text-sm font-black text-neutral-900 outline-none w-36 shadow-2xs"
+                  className="bg-white px-3 py-2 rounded-xl border border-neutral-300 text-sm font-black text-neutral-900 outline-none w-36 shadow-2xs focus:border-pedidosya-red"
                 />
               </div>
             )}
