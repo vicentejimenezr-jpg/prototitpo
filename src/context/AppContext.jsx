@@ -127,7 +127,7 @@ export const AppProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem('pucv_orders');
       if (saved) return JSON.parse(saved);
-      // Sample mock initial order to showcase tracking
+      // Sample mock initial orders to showcase active and past reservations
       return [
         {
           id: 'PUCV-742',
@@ -155,19 +155,84 @@ export const AppProvider = ({ children }) => {
           ],
           total: 6190,
           customerName: 'Vicente Morales',
-          customerEmail: 'vicente.morales@pucv.cl',
+          customerEmail: 'vicente.morales@mail.pucv.cl',
           customerPhone: '+56 9 8765 4321',
           pickupTime: 'Recreo de mañana (11:15 - 11:30)',
           pickupTimeStr: '11:15 hrs',
           paymentMethod: 'JUNAEB Sodexo / Pluxee',
           status: 'preparando', // 'recibido' | 'preparando' | 'listo' | 'entregado'
           createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'PUCV-580',
+          kioskId: 'kiosk-central-1',
+          kioskName: 'El Cafecito Central',
+          campusName: 'Casa Central PUCV',
+          locationDetails: 'Patio Central frente a Aula Magna',
+          items: [
+            {
+              id: 'p-c1-2',
+              name: 'Barros Luco en Pan Amasado Artesanal',
+              price: 3600,
+              quantity: 1,
+              notes: 'Bien caliente el queso fundido',
+              selectedOptions: {}
+            },
+            {
+              id: 'p-c1-4',
+              name: 'Jugo Natural Naranja Plátano (16oz)',
+              price: 2100,
+              quantity: 1,
+              notes: '',
+              selectedOptions: {}
+            }
+          ],
+          total: 5700,
+          customerName: 'Vicente Morales',
+          customerEmail: 'vicente.morales@mail.pucv.cl',
+          customerPhone: '+56 9 8765 4321',
+          pickupTime: 'Primer turno almuerzo (12:45 - 13:15)',
+          pickupTimeStr: '12:45 hrs',
+          paymentMethod: 'JUNAEB Sodexo / Pluxee',
+          status: 'entregado',
+          createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString()
         }
       ];
     } catch (e) {
       return [];
     }
   });
+
+  // -------------------------------------------------------------
+  // STUDENT USER PROFILE & AUTHENTICATION STATE
+  // -------------------------------------------------------------
+  const [studentUser, setStudentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pucv_student_user');
+      if (saved) return JSON.parse(saved);
+      return {
+        username: 'vicente.morales',
+        email: 'vicente.morales@mail.pucv.cl',
+        name: 'Vicente Morales',
+        phone: '+56 9 8765 4321',
+        preferredCampus: 'casa-central',
+        preferredPayment: 'junaeb_sodexo',
+        isAuthenticated: true
+      };
+    } catch (e) {
+      return {
+        username: 'vicente.morales',
+        email: 'vicente.morales@mail.pucv.cl',
+        name: 'Vicente Morales',
+        phone: '+56 9 8765 4321',
+        preferredCampus: 'casa-central',
+        preferredPayment: 'junaeb_sodexo',
+        isAuthenticated: true
+      };
+    }
+  });
+
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Currently tracking order (for live modal)
   const [trackingOrder, setTrackingOrder] = useState(null);
@@ -192,6 +257,58 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('pucv_kiosk_applications', JSON.stringify(kioskApplications));
   }, [kioskApplications]);
+
+  useEffect(() => {
+    if (studentUser) {
+      localStorage.setItem('pucv_student_user', JSON.stringify(studentUser));
+    }
+  }, [studentUser]);
+
+  // Student Authentication & Profile Handlers
+  const loginStudent = (usernameInput, passwordInput) => {
+    let clean = (usernameInput || '').trim().toLowerCase();
+    clean = clean.replace('@mail.pucv.cl', '').replace('@pucv.cl', '');
+    if (!clean) clean = 'vicente.morales';
+
+    const formattedName = clean
+      .split('.')
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ') || 'Estudiante PUCV';
+
+    const updatedUser = {
+      ...(studentUser || {}),
+      username: clean,
+      email: `${clean}@mail.pucv.cl`,
+      name: formattedName,
+      phone: studentUser?.phone || '+56 9 8765 4321',
+      preferredCampus: studentUser?.preferredCampus || 'casa-central',
+      preferredPayment: studentUser?.preferredPayment || 'junaeb_sodexo',
+      isAuthenticated: true
+    };
+
+    setStudentUser(updatedUser);
+    localStorage.setItem('pucv_student_user', JSON.stringify(updatedUser));
+    return { success: true, user: updatedUser };
+  };
+
+  const logoutStudent = () => {
+    const updated = {
+      ...(studentUser || {}),
+      isAuthenticated: false
+    };
+    setStudentUser(updated);
+    localStorage.setItem('pucv_student_user', JSON.stringify(updated));
+  };
+
+  const updateStudentProfile = (updates) => {
+    const updated = {
+      ...(studentUser || {}),
+      ...updates
+    };
+    setStudentUser(updated);
+    localStorage.setItem('pucv_student_user', JSON.stringify(updated));
+    return updated;
+  };
 
   // Kiosk Authentication Handlers
   const openKioskAuth = (tab = 'login') => {
@@ -764,7 +881,14 @@ export const AppProvider = ({ children }) => {
         recoverPassword,
         kioskApplications,
         submitKioskApplication,
-        simulateIncomingOrder
+        simulateIncomingOrder,
+        // Student Profile & Auth
+        studentUser,
+        isProfileModalOpen,
+        setIsProfileModalOpen,
+        loginStudent,
+        logoutStudent,
+        updateStudentProfile
       }}
     >
       {children}

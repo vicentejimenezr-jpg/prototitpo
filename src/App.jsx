@@ -13,6 +13,7 @@ import ReservationModal from './components/ReservationModal';
 import OrderTrackerModal from './components/OrderTrackerModal';
 import KioskAdminPanel from './components/KioskAdminPanel';
 import KioskAuthModal from './components/KioskAuthModal';
+import StudentProfileModal from './components/StudentProfileModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Store, 
@@ -248,6 +249,7 @@ function MainContent() {
       <ReservationModal />
       <OrderTrackerModal />
       <KioskAuthModal />
+      <StudentProfileModal />
     </div>
   );
 }

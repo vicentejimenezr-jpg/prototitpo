@@ -22,7 +22,8 @@ export default function ReservationModal() {
     getKioskActiveAsapOrders,
     getKioskSlotOccupancy,
     getCurrentTime,
-    setSimulatedTime
+    setSimulatedTime,
+    studentUser
   } = useApp();
 
   const [selectedTimeOption, setSelectedTimeOption] = useState('recreo-1');
@@ -30,12 +31,22 @@ export default function ReservationModal() {
     const d = new Date(Date.now() + 30 * 60 * 1000);
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
-  const [customerName, setCustomerName] = useState('Vicente Morales');
-  const [customerEmail, setCustomerEmail] = useState('vicente.morales@pucv.cl');
-  const [customerPhone, setCustomerPhone] = useState('+56 9 8765 4321');
-  const [selectedPayment, setSelectedPayment] = useState('junaeb_sodexo');
+  const [customerName, setCustomerName] = useState(studentUser?.name || 'Vicente Morales');
+  const [customerEmail, setCustomerEmail] = useState(studentUser?.email || 'vicente.morales@mail.pucv.cl');
+  const [customerPhone, setCustomerPhone] = useState(studentUser?.phone || '+56 9 8765 4321');
+  const [selectedPayment, setSelectedPayment] = useState(studentUser?.preferredPayment || 'junaeb_sodexo');
   const [orderNote, setOrderNote] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Sync with student user profile whenever checkout opens or studentUser changes
+  useEffect(() => {
+    if (studentUser) {
+      if (studentUser.name) setCustomerName(studentUser.name);
+      if (studentUser.email) setCustomerEmail(studentUser.email);
+      if (studentUser.phone) setCustomerPhone(studentUser.phone);
+      if (studentUser.preferredPayment) setSelectedPayment(studentUser.preferredPayment);
+    }
+  }, [studentUser, isCheckoutOpen]);
 
   const firstItem = (cart && cart.length > 0) ? cart[0] : {};
   const currentKiosk = (kiosks && kiosks.find(k => k && k.id === firstItem?.kioskId)) || (kiosks && kiosks[0]) || {};

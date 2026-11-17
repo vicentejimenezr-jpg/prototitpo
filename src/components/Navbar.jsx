@@ -11,7 +11,8 @@ import {
   KeyRound, 
   LogOut, 
   PlusCircle,
-  ChevronDown
+  ChevronDown,
+  User
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -33,7 +34,9 @@ export default function Navbar() {
     isKioskAuthenticated,
     kioskUser,
     openKioskAuth,
-    logoutKiosk
+    logoutKiosk,
+    studentUser,
+    setIsProfileModalOpen
   } = useApp();
 
   const activeOrder = orders.find(o => o.status !== 'entregado' && o.status !== 'cancelado');
@@ -236,6 +239,25 @@ export default function Navbar() {
               ) : (
                 <span className="sm:hidden text-xs">0</span>
               )}
+            </button>
+
+            {/* Student Profile Button (Next to Tu Reserva) */}
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200/90 active:scale-95 text-neutral-800 px-2.5 sm:px-3 py-2 rounded-full font-bold text-xs sm:text-sm border border-neutral-200/80 transition shrink-0"
+              title="Mi Perfil Estudiante PUCV"
+              aria-label="Abrir perfil de estudiante"
+            >
+              <div className="w-5 h-5 rounded-full bg-pedidosya-pucv text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                {studentUser?.isAuthenticated && studentUser?.name ? (
+                  studentUser.name.charAt(0).toUpperCase()
+                ) : (
+                  <User className="w-3 h-3 text-pedidosya-pucvGold" />
+                )}
+              </div>
+              <span className="hidden sm:inline font-bold">
+                {studentUser?.isAuthenticated ? (studentUser.name.split(' ')[0] || 'Perfil') : 'Perfil'}
+              </span>
             </button>
 
           </div>
